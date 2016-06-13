@@ -1,0 +1,18 @@
+How to download CMIP5 data, as of June 2016
+
+This was a bit challenging to figure out, so here's the process since I will surely forget this by the next time:
+
+1. Go to the Lawrence Livemore NL website: https://pcmdi.llnl.gov/projects/esgf-llnl/
+2. Sign in (or create account)- a free ESGF account is necessary to download data.
+3. Search is hard to find- have to scroll way down. The search site is here: https://pcmdi.llnl.gov/search/cmip5/
+4. Use the dropdowns on the left to select the models, ensembles, variables, etc. desired. I found that it worked best to select one field at a time and hit "search", which narrowed the options for the next field.
+5. Click "add all displayed results to datacart"
+6. Go to datacart (link in upper right corner)
+7. Use the unlabeled search box to enter the variable names you want (ex. tasmin|tasmax). NOTE: you have to do this even if you already selected specific variables from the dropdown menu on the previous page.
+8. Clich the "WGet script" button and download the scripts that are generated.
+9. Run these scripts on hyalite. It is difficult (maybe impossible) to submit to slurm because of the way the site requires login info and the default download location for security scripts. For a couple files, just run interactively on the head node. For more than a couple files, ssh in to a data transfer node.
+
+Downloading data via data transfer node:
+$ ssh dtn1
+then cd to your directory, and do the wget there
+If you want to make sure that the wget doesn't end when you log out, you can use a tmux session. Start it by typing "tmux".  It gives you a shell.  Then you can start up the wget.  Then you can use the command key (type "ctrl-b") then detach the session (type "d"). You will be returned to your original shell and the download will continue in the background even after logging out.  To get back to it, ssh back into dtn1 and then type "tmux a" (which means tmux attach).  If you have multiple sessions, you can list them by typing "tmux ls".  Type "exit" to quit the tmux session completely.
