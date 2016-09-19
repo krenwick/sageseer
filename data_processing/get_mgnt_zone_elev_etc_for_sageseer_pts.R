@@ -1,0 +1,83 @@
+#############################################################################
+# Which management unit is each sageseer point in? What is the elevation?
+# Does: use sageseer points to extract elev and management unit
+#############################################################################
+# libraries
+library(raster)
+require("rgdal") # requires sp, will use proj.4 if installed
+require("maptools")
+require("ggplot2")
+require("plyr")
+
+# Read in sageseer points
+pts <- read.csv("/Users/poulterlab1/Box Sync/sageseer/ModelComparison/focal_sites_for_comparison.csv")
+# load states map to overlay
+states <- readOGR("/Users/poulterlab1/Documents/GIS_baselayers/", "states")
+wus <- states[states$STATE_ABBR=="WA"|states$STATE_ABBR=="OR"|states$STATE_ABBR=="CA"
+              |states$STATE_ABBR=="ID"|states$STATE_ABBR=="NV"|states$STATE_ABBR=="MT"
+              |states$STATE_ABBR=="UT"|states$STATE_ABBR=="NM"|states$STATE_ABBR=="WY"
+              |states$STATE_ABBR=="CO"|states$STATE_ABBR=="AZ",]
+# Load sagegrouse management units
+grouse <- readOGR("/Users/poulterlab1/Box Sync/sageseer/ClimateData/SG_MgmtZones_ver2_20061018","SG_MgmtZones_ver2_20061018")
+grouse <- spTransform(grouse, CRS(proj4string(states)))
+
+# Load Kuchler sagebrush map (shapefile from Adler)
+artrdist <- readOGR("/Users/poulterlab1/Documents/GIS_baselayers/","bigsagebrush")
+artrdist<-spTransform(artrdist, CRS(proj4string(states)))
+
+# Load actual, unclipped Kuchler map
+KL <- readOGR("/Users/poulterlab1/Documents/GIS_baselayers/","Potential_Natural_Vegetation_2000_sgca")
+KL <- spTransform(KL, CRS(proj4string(states)))
+
+# Load DEM: Read in raster tiles and merge
+# data is GTOPO30, 1-km resolution 
+edir <- ("/Users/poulterlab1/Documents/GIS_baselayers/")
+dem1 <-  raster(paste(edir,"gt30w140n40.tif", sep=""))
+dem2 <-  raster(paste(edir,"gt30w140n90.tif", sep=""))
+dem <- merge(dem1,dem2)
+
+# convert to points for plotting
+val1 <- rasterToPoints(dem)
+val2 <- data.frame(val1)
+
+# Get kuchler data in plottable format
+artrdist@data$id = rownames(artrdist@data)
+kuch.pt <- fortify(artrdist, region="id")
+kuch.df = join(kuch.pt, artrdist@data, by="id")
+ggplot(data=pts, aes(x=longitude, y=latitude)) +
+ # geom_raster(data=val2,aes(x,y)) +
+  #geom_polygon(data=grouse, aes(long,lat, group), fill=NA,color="green") +
+  geom_polygon(data=kuch.df, aes(long,lat, fill=as.factor(KUCHLER_),group=group), color=NA) +
+  geom_point(data=pts,aes(shape=as.factor(outlier))) +
+  geom_polygon(data=wus, aes(long,lat, group),fill=NA, color="grey46") +
+  theme_bw(base_size = 24, base_family = "Helvetica") +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  coord_equal(1.3)
+
+#load ecoregions
+sdir <- ("/Users/poulterlab1/Documents/GIS_baselayers/")
+ecoreg <- readOGR(sdir,"us_eco_l3")
+ecoreg <- spTransform(ecoreg, CRS(proj4string(states)))
+
+# Extract management unit and elev by points
+pts2 <- pts[,1:2]
+elev <- raster::extract(dem,pts2)
+mgnt.unit <- extract(grouse,pts2) %>%
+  dplyr::select(Mgmt_zone:Name)
+eco <- extract(ecoreg,pts2) %>%
+  dplyr::select(US_L3CODE:NA_L1NAME)
+sagetype <- extract(artrdist, pts2) %>%
+  dplyr::select(VEGTYP_LAB)
+KL2 <- extract(KL, pts2)
+KL3 <- KL2 %>%  dplyr::select(PNV_GROUPS)
+
+newout <- cbind(pts,elev,mgnt.unit,eco,sagetype,KL3) 
+head(newout)
+write.csv(newout,"/Users/poulterlab1/Box Sync/sageseer/ModelComparison/focal_sites_by_zone.csv", row.names=F)
+
+
+
+#################################################################
+
+

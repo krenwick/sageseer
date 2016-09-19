@@ -232,25 +232,25 @@ for rcp in ${rcpArray[@]}; do;
 		#########################
 		#Clip Daymet
 		echo "Rescaling DAYMET data and calculating long-term monthly mean"
-		if [ ! -f $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_ymonmean.nc ]; then				
+		if [ ! -f $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_ymonmean.nc ]; then				
 			#Select wusa for DAYMET
-			cdo sellonlatbox,-124.25,-102.25,31.75,49 $fdirDAYMET/tmean_wusa_1980-2014.nc4 $fdirKatieDAYMET/tmean_wusa_1980-2014_daily_latlon_monthly-wusa.nc
+			cdo sellonlatbox,-124.25,-102.25,31.75,49 $fdirDAYMET/tmax_wusa_1980-2014.nc4 $fdirKatieDAYMET/tmax_wusa_1980-2014_daily_latlon_monthly-wusa.nc
 
 			#Shift to same grid
-			cdo -s -f nc remapbil,$fdirGRID/wusa_1km $fdirKatieDAYMET/tmean_wusa_1980-2014_daily_latlon_monthly-wusa.nc $fdirKatieDAYMET/tmean_wusa_1980-2014_daily_latlon_monthly-wusa_shift.nc
+			cdo -s -f nc remapbil,$fdirGRID/wusa_1km $fdirKatieDAYMET/tmax_wusa_1980-2014_daily_latlon_monthly-wusa.nc $fdirKatieDAYMET/tmax_wusa_1980-2014_daily_latlon_monthly-wusa_shift.nc
 
 			#Calculate monthly means of Daymet observations for 1980-1999 observation period
-			cdo -s seldate,1980-01-01,1999-12-31 $fdirKatieDAYMET/tmean_wusa_1980-2014_daily_latlon_monthly-wusa_shift.nc $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_tmp.nc
-			cdo -s ymonmean $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_tmp.nc $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_ymonmean_allparam.nc
+			cdo -s seldate,1980-01-01,1999-12-31 $fdirKatieDAYMET/tmax_wusa_1980-2014_daily_latlon_monthly-wusa_shift.nc $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_tmp.nc
+			cdo -s ymonmean $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_tmp.nc $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_ymonmean_allparam.nc
 			
 			#Select param -3
-			cdo selparam,-1 $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_ymonmean_allparam.nc $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_ymonmean.nc
+			cdo selparam,-1 $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_ymonmean_allparam.nc $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_ymonmean.nc
 			
 			#Clean up
-			rm -rf $fdirKatieDAYMET/tmean_wusa_1980-2014_daily_latlon_monthly-wusa.nc
-			rm -rf $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_tmp.nc
-			rm -rf $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_ymonmean_allparam.nc
-			rm -rf $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly-wusa_shift.nc
+			rm -rf $fdirKatieDAYMET/tmax_wusa_1980-2014_daily_latlon_monthly-wusa.nc
+			rm -rf $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_tmp.nc
+			rm -rf $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_ymonmean_allparam.nc
+			rm -rf $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly-wusa_shift.nc
 		fi
 
         #########################
@@ -322,7 +322,7 @@ ls $fdirOUT*$rcp*1861-2099.nc
 
 				#Calculate correction factor where positive means CRU temperature is higher than GCM and negative means CRU temperature is less than GCM
 				#Use -b 64 to ensure successful subtraction for all grids - some fail without this
-				cdo -s -b 64 sub $fdirKatieDAYMET/tmean_wusa_1980-1999_daily_latlon_monthly_ymonmean.nc  $fdirOUT/"tasmax_Amon_"$model"_"$rcp"_"$ensemble"_1981-1999-1km-ymonmean.nc" $fdirOUT/"tasmax_Amon_"$model"_"$rcp"_"$ensemble"_1981-1999-1km-cf.nc"
+				cdo -s -b 64 sub $fdirKatieDAYMET/tmax_wusa_1980-1999_daily_latlon_monthly_ymonmean.nc  $fdirOUT/"tasmax_Amon_"$model"_"$rcp"_"$ensemble"_1981-1999-1km-ymonmean.nc" $fdirOUT/"tasmax_Amon_"$model"_"$rcp"_"$ensemble"_1981-1999-1km-cf.nc"
 				
 				#########################
 				#Apply correction factor to simulation so that low GCM values are increased and high GCM values are reduced
