@@ -1,6 +1,8 @@
 #############################################################################
 # Which management unit is each sageseer point in? What is the elevation?
 # Does: use sageseer points to extract elev and management unit
+  # Sept. 2016: now also extracts ecoregion and Kuchler PNV type
+# Output: writes csv of points with additional attributes
 #############################################################################
 # libraries
 library(raster)
@@ -45,7 +47,7 @@ artrdist@data$id = rownames(artrdist@data)
 kuch.pt <- fortify(artrdist, region="id")
 kuch.df = join(kuch.pt, artrdist@data, by="id")
 ggplot(data=pts, aes(x=longitude, y=latitude)) +
- # geom_raster(data=val2,aes(x,y)) +
+ # geom_raster(data=val2,aes(x,y)) + # takes long ime to draw raster
   #geom_polygon(data=grouse, aes(long,lat, group), fill=NA,color="green") +
   geom_polygon(data=kuch.df, aes(long,lat, fill=as.factor(KUCHLER_),group=group), color=NA) +
   geom_point(data=pts,aes(shape=as.factor(outlier))) +
@@ -73,11 +75,5 @@ KL2 <- extract(KL, pts2)
 KL3 <- KL2 %>%  dplyr::select(PNV_GROUPS)
 
 newout <- cbind(pts,elev,mgnt.unit,eco,sagetype,KL3) 
-head(newout)
 write.csv(newout,"/Users/poulterlab1/Box Sync/sageseer/ModelComparison/focal_sites_by_zone.csv", row.names=F)
-
-
-
-#################################################################
-
 
