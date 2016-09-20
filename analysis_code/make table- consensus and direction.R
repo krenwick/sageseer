@@ -18,32 +18,21 @@ m3 <- merged %>%
   mutate(change=predicted-baseline) %>%
   mutate(direction=ifelse(change>0,"Positive","Negative")) %>%
   na.omit() 
-m3 %>% group_by(model) %>% summarise(mbase=mean(baseline),mpred=mean(predicted))
-unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) %>%
-  select(site,elev:Name)
 
-m4 <- m3 %>% 
-  mutate(perc_change=(predicted-baseline)) %>%
-  mutate(cat=ifelse(perc_change>0, "increase", "decrease")) %>%
-  mutate(cat=ifelse(perc_change==0, "nochange", cat)) 
+# look at mean baseline and mean predicted for each model
+m3 %>% group_by(model) %>% summarise(mbase=mean(baseline),mpred=mean(predicted))
+
+# calculate change
+m4 <- m3 %>% mutate(change=(predicted-baseline)) 
 
 # Function to get % of sites with increase vs. decrease + confidence
-# for testing:
-data=m4
-magn=4
-varn="temp"
 direction_change <- function(data,magn,varn) {
   d2 <- data %>%
-    dplyr::select(site, model:mag,perc_change) %>%
-    #PROBLEM: 0/0 = NaN, so sites with no cover that still have no cover are cut
-    #PROBLEM: sites with no cover in baseline get ration of Inf
-    # To leave these in, uncomment following lines (BAD SOLUTION)
-    #mutate(perc_change=ifelse(perc_change==Inf,999,perc_change)) %>%
-    #mutate(perc_change=ifelse(is.na(perc_change),-999,perc_change)) %>%
+    dplyr::select(site, model:mag,change) %>%
     filter(mag==magn&var==varn) %>%
-    #filter(perc_change!=Inf) %>% # get rid of sites with zero as baseline
+    #filter(change!=Inf) %>% # get rid of sites with zero as baseline
     group_by(site) %>%
-    summarise(n=n(),n.increase=sum(perc_change>0), n.decrease=sum(perc_change<0)) %>%
+    summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<0)) %>%
     mutate(conf2=n.increase-n.decrease) %>%
     mutate(consensus=ifelse(conf2>0,"increase","nada")) %>%
     mutate(consensus=ifelse(conf2<0,"decrease",consensus)) %>%
