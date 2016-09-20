@@ -1,59 +1,60 @@
 #############################################################################
 # use coordinates from Andy's project to extract data
 # ouput csv with data in common format
+# Sept. 2017: updates to file paths due to file reorganization
 #############################################################################
+rm(list=ls())
 library(dplyr)
 library(tidyr)
-library(ggplot2); theme_set(theme_bw(base_size=20)) # sized for ppt
 
 # set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
+dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Indiv_model_output/"
 
-# load data from each model
-clim_dat <- read.csv(paste(dpath, "plot_group_mean_climate.csv", sep=""))
-andy <- read.csv(paste(dpath, "", sep="AK_cover_predictions.csv"))
-katie <- read.csv(paste(dpath, "katie_sample_output.csv", sep=""))
-caroline <- read.csv(paste(dpath, "plot_group_locations_CC_randfor_extract.csv", sep=""))
-daniel <- read.csv(paste(dpath, "", sep=""))
+# load plot list w/ clim data + site list with Katie's odd coords
+clim_dat <- read.csv(paste(dpath, "../focal_sites_for_comparison.csv", sep=""))
+ksites <- read.csv(paste(dpath, "../KMR_sitelist2.csv", sep=""))
 
-# combine all into one data frame (if column names the same, should work!)
-#andy <- dplyr::select(andy,plot_group:predicted)
-all1 <- rbind(andy,katie,caroline) # daniel
+# load data from each model, mutate to make formats consistent
+andy <- read.csv(paste(dpath, "AK_cover_predictions.csv",sep="")) %>%
+  na.omit() %>%
+  filter(baseline<6.8 & baseline>6) %>%
+  distinct()
+katie <- read.csv(paste(dpath, "KMR_cover_data-comp.csv", sep="")) %>%
+  mutate(longitude=round(longitude,3), latitude=round(latitude,3)) %>%
+  mutate(baseline=baseline*100,predicted=predicted*100)
+caroline <- read.csv(paste(dpath, "focal_sites_for_comparison_CCrandfor_extract_new7-18.csv", sep=""))
+daniel <- read.csv(paste(dpath, "DRS_726focusSites_recruitment_predictions_DaymetCorrected.csv", sep="")) %>%
+  mutate(baseline=baseline*100,predicted=predicted*100)
+
+# combine all into one data frame 
+# FIRST: get all disparate data in the same format
+c2 <- select(clim_dat,longitude:site) 
+car2 <- select(caroline,longitude:site,model:projected) %>%
+  rename(predicted=projected)
+k2 <- merge(katie, ksites, by=c("longitude","latitude")) %>%
+  select(longitude,latitude,site,model, var,mag,baseline,predicted)
+d2 <- merge(daniel,c2, by="site",all.x=T, all.y=F) %>%
+  select(longitude,latitude,site,model, var,mag,baseline,predicted)
+
+# SECOND: rbind to combine them all
+all <- rbind(d2,andy,k2,car2)
+
+# THIRD: fix inconsistencies in var/mag coding
+all2 <- mutate(all, var=ifelse(var=="tmax"|var=="tmean", "temp","ppt")) %>%
+  mutate(mag=ifelse(mag==-.1,.9,mag)) %>%
+  mutate(mag=ifelse(mag==.1,1.1,mag)) %>%
+  mutate(mag=ifelse(mag==.2&var=="ppt",1.2,mag)) %>%
+  na.omit()
+# check- should have same # in each category
+table(all2$var, all2$mag, all2$model)
 
 # merge in the climate covariates
-all2 <- merge(all1,clim_dat, by="plot_group")
-head(all2)
-dim(all2)
+all3 <- merge(all2,clim_dat, by="site")
+table(all3$var, all3$mag, all3$model)
 
-# calculate % change
-all3 <- mutate(all2, change=(predicted-baseline)/baseline)
+# scale MAT so is degrees (original data lacked decimal)
+all4 <- mutate(all3, MAT=MAT/10)
 
 # output merged data
-write.csv(all3, (paste(dpath, "merged_data.csv", sep="")), row.names=F)
+write.csv(all4, (paste(dpath, "merged_data-co2.csv", sep="")), row.names=F)
 
-# make graphs of preliminary data
-merged <- read.csv(paste(dpath, "merged_data.csv", sep=""))
-head(merged)
-m2 <- merged %>%
-  na.omit()
-
-m3 <- dplyr::select(m2, -var, -baseline, -predicted) %>%
-  spread(model, change) 
-head(m3)
-
-ggplot(m3, aes(x=AK, y=KR, color=PRISM_avg_ann_tmax)) +
-  geom_point() +
-  geom_smooth(method="lm") +
-  geom_abline(intercept=0, slope=1)
-
-ggplot(data=m2, aes(x=PRISM_avg_ann_tmax, y=change, color=model)) +
-  geom_smooth(method=lm) +
-  geom_point(aes(x=PRISM_avg_ann_tmax, y=change, color=model)) +
-  geom_hline(y=0) +
-  xlab(expression("Mean Annual Temperature ("*~degree*"C)")) +
-  ylab("Percent Change") +
-  ggtitle(expression("4"*~degree*"C Temperature Increase"))
-  
-  
-  
-  
