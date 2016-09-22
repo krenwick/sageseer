@@ -3,9 +3,8 @@
 # RUN THIS ON HYALITE! Would take too long to download data
 ################################################################################
 # load libraries
-library(ggplot2); theme_set(theme_bw(base_size=20)) # sized for ppt
-library(dplyr)
-library(tidyr)
+#library(dplyr)
+#library(tidyr)
 library(raster)
 library(rgdal)
 
@@ -50,7 +49,7 @@ mat45<-NULL
 for(i in 1:length(mapfiles)){
   file <- matfiles[i]
   for(time in 1:239) {
-    pr1 <- raster(file,varname="pr", band=time)
+    pr1 <- raster(file,varname="tas", band=time)
     pr2 <- raster::extract(pr1,ll)
     m1 <- cbind.data.frame(time,file,pr2)
     mat45 <- rbind(mat45,m1)
@@ -63,7 +62,7 @@ mat85<-NULL
 for(i in 1:length(mapfiles)){
   file <- matfiles85[i]
   for(time in 1:239) {
-    pr1 <- raster(file,varname="pr", band=time)
+    pr1 <- raster(file,varname="tas", band=time)
     pr2 <- raster::extract(pr1,ll)
     m1 <- cbind.data.frame(time,file,pr2)
     mat85 <- rbind(mat85,m1)
