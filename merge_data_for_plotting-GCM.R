@@ -14,7 +14,7 @@ dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Indiv_model_outpu
 clim_dat <- read.csv(paste(dpath, "../focal_sites_for_comparison.csv", sep=""))
 c2 <- select(clim_dat,longitude:site) # need for merging
 
-# load data from each model, mutate to make formats consistent
+# FIRST: load data from each model, mutate to make formats consistent
 andy <- read.csv(paste(dpath, "AK_cover_GCM_predictions_with_sites.csv",
                        sep="")) %>%
   na.omit() %>%
@@ -30,22 +30,13 @@ Maxraw <- read.csv(paste(dpath, "focal_sites_for_comparison_CAC_maxentRawoutput.
 Maxbin <- read.csv(paste(dpath, "focal_sites_for_comparison_CAC_maxentBinaryoutput.csv", sep="")) %>%
   mutate(model="MaxEntBin") %>%
   rename(longitude=lon,latitude=lat)
-
-daniel <- read.csv(paste(dpath, "DRS_726focusSites_recruitment_predictions_DaymetCorrected.csv", sep="")) %>%
-  mutate(baseline=baseline*100,predicted=predicted*100)
-
-# combine all into one data frame 
-# FIRST: get all disparate data in the same format
-
-car2 <- select(caroline,longitude:site,model:projected) %>%
-  rename(predicted=projected)
-k2 <- merge(katie, ksites, by=c("longitude","latitude")) %>%
-  select(longitude,latitude,site,model, var,mag,baseline,predicted)
-d2 <- merge(daniel,c2, by="site",all.x=T, all.y=F) %>%
-  select(longitude,latitude,site,model, var,mag,baseline,predicted)
+daniel <- read.csv(paste(dpath, "DRS_GISSM-output_726AKpg_Exp2-GCM-Scenarios_DaymetCorrected.csv", sep="")) %>%
+  mutate(baseline=baseline*100,predicted=predicted*100) %>%
+  select(-X) %>%
+  mutate(scenario=gsub("RCP", "rcp",scenario)) 
 
 # SECOND: rbind to combine them all
-all <- rbind(katie,andy,RF,Maxraw,Maxbin)
+all <- rbind(katie,andy,RF,Maxraw,Maxbin,daniel)
 
 # check- should have same # in each category
 table(all$scenario, all$GCM, all$model)
