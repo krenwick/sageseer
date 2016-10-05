@@ -267,3 +267,37 @@ ggplot(data=d, aes(x=VEGTYP_LAB,y=change, color=model)) +
                position = position_dodge(width = 0.75)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+
+## Sites grouped by resistance and resilience classes
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp")
+# cut sites with zero or NA
+d2 <- filter(d, RR_class_name!=0) %>% na.omit()
+ggplot(data=d2, aes(x=RR_class_name,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## Sites grouped by temp/moisutre regime
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp")
+# cut sites with zero or NA
+d2 <- filter(d, RR_class_name!=0) %>% na.omit()
+ggplot(data=d, aes(x=common_name,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
