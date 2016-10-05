@@ -49,5 +49,5 @@ table(all3$scenario, all3$GCM, all3$model)
 all4 <- mutate(all3, MAT=MAT/10)
 
 # output merged data
-write.csv(all4, (paste(dpath, "merged_data_GCM.csv", sep="")), row.names=F)
+write.csv(all4, (paste(dpath, "../merged_data_GCM.csv", sep="")), row.names=F)
 
