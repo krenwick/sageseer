@@ -71,6 +71,14 @@ RF
 #ME_bin
 dev.off()
 
+# Save as 4-plot grid
+jpeg(paste(fpath, "change_GCM_rcpssame.jpeg", sep=""),
+     width = 420, height = 300, units = 'mm', res = 300)
+grid.arrange(legend, arrangeGrob(RF,TS,DGVM,GISSM, ncol=2), ncol=1,
+             heights = c(0.2, 2.5,0))
+
+dev.off()
+
 ################################################################################
 # Plot raw change along precip gradient
 plot_raw_change <- function(modeln,title) {
@@ -127,6 +135,55 @@ dev.off()
 ################################################################################
 # Plot the absolute change, in original scale, MAT gradient, 4-plot grid
 ################################################################################
+m4 <- filter(m3, scenario=="rcp45")
+
+plot_raw_change <- function(modeln, ylab,title) {
+  d <- dplyr::filter(m4, model==modeln)
+  plot <- ggplot(data=d, aes(x=MAT,y=change)) +
+    geom_point(aes(color=GCM), size=1) +
+    scale_color_manual(values=cbPalette, name="GCM") +
+    geom_hline(yintercept=0, linetype="dashed") +
+    stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+    scale_fill_manual(values=cbPalette, name="GCM") +
+    ylab("Change in Response") +
+    theme(legend.position="none", legend.title=element_blank(),
+          panel.background=element_blank(),plot.background=element_blank(),
+          legend.text.align = 0,
+          plot.margin=unit(c(.1,.1,.1,.1), "cm"),
+          axis.title.y = element_text(size = rel(1.3))) +
+    xlab("MAT") +
+    scale_x_continuous(limits=c(-1.9,22.9)) +
+    ylab(ylab) +
+    annotate("text", x=Inf, y = Inf, label = title, vjust=1.3, hjust=1.3, size=8)
+  return(plot)
+}
+MaxEnt <- plot_raw_change(modeln="MaxEntBin", ylab=expression(paste(Delta," % Yrs with Regen")), title="GISSM")
+DGVM <- plot_raw_change(modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DGVM")
+CC <- plot_raw_change(modeln="RandFor", ylab=expression(paste(Delta," Max % Cover")), title="RF")
+AK <- plot_raw_change(modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TS")
+DRS <- plot_raw_change(modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="GISSM")
+DGVM
+
+# make legend
+leg <- plot_raw_change(modeln="AK", ylab="", title="TS")
+leg2 <- leg + theme(legend.position="top")
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+legend <- get_legend(leg2)
+
+# Save Plot
+jpeg(paste(fpath, "change_temp_GCM_rcp45.jpeg", sep=""),
+     width = 420, height = 420, units = 'mm', res = 300)
+grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
+             heights = c(0.2, 2.5,0))
+
+dev.off()
+
+############ SAME for RCP8.5
 m4 <- filter(m3, scenario=="rcp85")
 
 plot_raw_change <- function(modeln, ylab,title) {
@@ -168,9 +225,17 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save Plot
-jpeg(paste(fpath, "change_temp_GCM.jpeg", sep=""),
-     width = 420, height = 420, units = 'mm', res = 300)
+jpeg(paste(fpath, "change_temp_GCM_rcp85.jpeg", sep=""),
+     width = 420, height = 300, units = 'mm', res = 300)
 grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
+             heights = c(0.2, 2.5,0))
+
+dev.off()
+
+# Save Plot
+jpeg(paste(fpath, "change_temp_GCM_rcp85_1row.jpeg", sep=""),
+     width = 420, height = 200, units = 'mm', res = 300)
+grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=4), ncol=1,
              heights = c(0.2, 2.5,0))
 
 dev.off()
