@@ -49,9 +49,9 @@ dem <- merge(dem1,dem2)
 #kuch.df = join(kuch.pt, artrdist@data, by="id")
 ggplot(data=pts, aes(x=longitude, y=latitude)) +
  # geom_raster(data=val2,aes(x,y)) + # takes long ime to draw raster
-  #geom_polygon(data=grouse, aes(long,lat, group), fill=NA,color="green") +
-  geom_polygon(data=kuch.df, aes(long,lat, fill=as.factor(KUCHLER_),group=group), color=NA) +
-  geom_point(data=pts,aes(shape=as.factor(outlier))) +
+  geom_polygon(data=grouse, aes(long,lat, group), fill=NA,color="green", size=1) +
+  #geom_polygon(data=kuch.df, aes(long,lat, fill=as.factor(KUCHLER_),group=group), color=NA) +
+  geom_point(data=pts) +
   geom_polygon(data=wus, aes(long,lat, group),fill=77*NA, color="grey46") +
   theme_bw(base_size = 24, base_family = "Helvetica") +
   xlab("Longitude") +
