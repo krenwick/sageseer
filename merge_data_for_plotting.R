@@ -19,11 +19,11 @@ andy <- read.csv(paste(dpath, "AK_cover_predictions.csv",sep="")) %>%
   na.omit() %>%
   filter(baseline<6.8 & baseline>6) %>%
   distinct()
-katie <- read.csv(paste(dpath, "KMR_cover_data-comp.csv", sep="")) %>%
+katie <- read.csv(paste(dpath, "KMR_cover-fullmodel.csv", sep="")) %>%
   mutate(longitude=round(longitude,3), latitude=round(latitude,3)) %>%
   mutate(baseline=baseline*100,predicted=predicted*100)
 caroline <- read.csv(paste(dpath, "focal_sites_for_comparison_CCrandfor_extract_new7-18.csv", sep=""))
-daniel <- read.csv(paste(dpath, "DRS_726focusSites_recruitment_predictions_DaymetCorrected.csv", sep="")) %>%
+daniel <- read.csv(paste(dpath, "DRS_GISSM-output_726AKpg_Exp1-Sensitivity_DaymetCorrected.csv", sep="")) %>%
   mutate(baseline=baseline*100,predicted=predicted*100)
 
 # combine all into one data frame 
@@ -33,8 +33,10 @@ car2 <- select(caroline,longitude:site,model:projected) %>%
   rename(predicted=projected)
 k2 <- merge(katie, ksites, by=c("longitude","latitude")) %>%
   select(longitude,latitude,site,model, var,mag,baseline,predicted)
-d2 <- merge(daniel,c2, by="site",all.x=T, all.y=F) %>%
-  select(longitude,latitude,site,model, var,mag,baseline,predicted)
+d2 <- daniel %>% select(-X, -longitude, -latitude) %>%
+  merge(c2, by="site",all.x=T, all.y=F) %>%
+  select(longitude,latitude,site,model, var,mag,baseline,predicted) %>%
+  mutate(model="DRS")
 
 # SECOND: rbind to combine them all
 all <- rbind(d2,andy,k2,car2)
