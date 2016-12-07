@@ -17,6 +17,7 @@ library(xtable)
 
 # paths to data and folder for figures
 dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
+fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
 fpath <- "/Users/poulterlab1/Documents/sageseer/Figures/"
 opath <- "/Users/poulterlab1/Documents/sageseer/"
 
@@ -94,6 +95,18 @@ ggplot(data=du.n2, aes(x=RR_class_name,y=change, fill=model)) +
   theme(legend.position="none")
 dev.off()
 
+jpeg(paste(fpath, "change_by_RR_elev.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du.n2, aes(x=MAT,y=change, color=model)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  ylab("Change in Response") +
+  #theme(panel.background=element_blank(),plot.background=element_blank(),
+        #legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~RR_class_name, scales="free") 
+dev.off()
+
 ################################################################################
 ## 1. Elevation
 # try scatter plot
@@ -129,3 +142,156 @@ dev.off()
     theme(panel.background=element_blank(),plot.background=element_blank(),
           legend.text.align = 0) +
     geom_hline(yintercept=.5, linetype="dashed") 
+  
+  
+  #### Look at MAT vs. RR
+  du5 <- du %>% group_by(site)
+
+ggplot(data=du5, aes(x=RR_class_name, y=MAT)) +
+    geom_boxplot()
+#################################################################################
+head(du2)
+ggplot(data=du2, aes(x=consensus, y=MAT)) +
+  geom_boxplot(notch=T)
+
+du3 <- filter(du2, scenario=="rcp85" & GCM=="CCSM4")
+ggplot(data=du3, aes(x=MAT, y=conf2, color=consensus)) +
+  geom_point()
+
+# full data
+du2 <- filter(du, scenario=="rcp45" & GCM=="CCSM4")
+
+jpeg(paste(fpath, "change_allpts_rcp45.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAT, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+# no outliers
+du2 <- filter(du, scenario=="rcp85" & GCM=="CCSM4" & outlier==0)
+
+jpeg(paste(fpath, "change_allpts.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAT, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+# no outliers
+du2 <- filter(du, scenario=="rcp85" & GCM=="CCSM4" & MAT<=120)
+
+jpeg(paste(fpath, "change_less12c.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAT, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+# no outliers
+du2 <- filter(du, scenario=="rcp85" & GCM=="CCSM4" & MAT<=120 & MAT>0)
+
+jpeg(paste(fpath, "change_less12c_great0.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAT, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+###################################
+#MAP
+# full data
+du2 <- filter(du, scenario=="rcp85" & GCM=="CESM1-CAM5")
+
+jpeg(paste(fpath, "MAP_change_allpts.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAP, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+# no outliers
+du2 <- filter(du, scenario=="rcp85" & GCM=="CCSM4" & outlier==0)
+
+jpeg(paste(fpath, "MAP_change_allpts_nooutlier.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAP, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+# less 12c
+du2 <- filter(du, scenario=="rcp85" & GCM=="CCSM4" & MAT<=120)
+
+jpeg(paste(fpath, "change_less12c.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAT, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+# less 12 >0
+du2 <- filter(du, scenario=="rcp85" & GCM=="CCSM4" & MAT<=120 & MAT>0)
+
+jpeg(paste(fpath, "change_less12c_great0.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAT, y=change)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
+
+#############################
+du2 <- filter(du, scenario=="rcp85" & GCM=="CESM1-CAM5")
+MAT <- seq(-30,300,1)
+DGVM <- filter(du2, model=="DGVM")
+m1 <- lm(data=DGVM, change~MAT)
+summary(m1)
+predict(m1, data=MAT)
+#424.8382 
+m1$coefficient[1]/-m1$coefficient[2]
+
+AK <- filter(du2, model=="AK")
+m1 <- lm(data=AK, change~MAT)
+summary(m1) # .26
+m1$coefficient[1]/-m1$coefficient[2] #114.811
+
+GISSM_v1.6.3 <- filter(du2, model=="GISSM_v1.6.3")
+m1 <- lm(data=GISSM_v1.6.3, change~MAT+MAP+MAT)
+summary(m1) #.06
+m1$coefficient[1]/-m1$coefficient[2]
+
+RandFor <- filter(du2, model=="RandFor")
+m1 <- lm(data=RandFor, change~MAT)
+summary(m1) #.09
+m1$coefficient[1]/-m1$coefficient[2]
+  
+  
+  # full data
+du2 <- filter(du, scenario=="rcp45" & GCM=="CCSM4")
+du3 <- filter(du, scenario=="rcp85" & GCM=="CCSM4")
+
+jpeg(paste(fpath, "change_allpts_rcp45.jpeg", sep=""),
+     width = 420, height = 250, units = 'mm', res = 300)
+ggplot(data=du2, aes(x=MAT, y=change)) +
+  geom_point(color="red") +
+  geom_point(data=du3,color="blue") +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scale="free")
+dev.off()
