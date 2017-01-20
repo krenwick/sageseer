@@ -57,12 +57,17 @@ foreach vname ( wetd swe srad tmax tmin vp prcp dayl )
         #Replace line 28 with method
         sed '28d' $fdirScripts/regrid_with_weights.csh > $fdirScripts/tmp.csh
         mv $fdirScripts/tmp.csh $fdirScripts/regrid_with_weights.csh
-        if( $vname == 'prcp' | $vname == 'wetd') then
+        if( $vname == 'prcp' ) then
             sed -e "28i\\
             method       = \"\"conserve"\"\" $fdirScripts/regrid_with_weights.csh > tmp.csh
         endif
+        
+        if( $vname == 'wetd') then
+            sed -e "28i\\
+            method       = \"\"nearestod"\"\" $fdirScripts/regrid_with_weights.csh > tmp.csh
+        endif
 
-        if( $vname != 'prcp') then
+        if( $vname != 'prcp' && vname != 'wetd') then
             sed -e "28i\\
             method       = \"\"bilinear"\"\" $fdirScripts/regrid_with_weights.csh > tmp.csh
         endif

@@ -23,7 +23,7 @@ set fdirScripts = (/mnt/lustrefs/store/katie.renwick/Climate_LPJGUESS/scripts_da
 
 #################
 #Set variable names
-set vname = wetdays
+set vname = vp
 set year = 1980
 
         #Modify the NCL merge code, first copy the original
