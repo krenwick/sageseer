@@ -50,8 +50,13 @@ set year = 1980
             sed -e "28i\\
                 method       = \"\"conserve"\"\" $fdirScripts/ESMF-weightgen.csh > tmp.csh
         endif
+        
+        if( $vname == 'wetdays') then
+            sed -e "28i\\
+                method       = \"\"nearestod"\"\" $fdirScripts/ESMF-weightgen.csh > tmp.csh
+        endif
 
-        if( $vname != 'prcp') then
+        if( $vname != 'prcp' && $vname != 'wetdays') then
             sed -e "28i\\
                 method       = \"\"bilinear"\"\" $fdirScripts/ESMF-weightgen.csh > tmp.csh
         endif
