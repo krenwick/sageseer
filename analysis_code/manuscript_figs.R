@@ -14,12 +14,12 @@ col1 <- 80 # 1 column width = 80 mm
 col2 <- 169 # 2 column width = 169 mm
 #--------------------------------------
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+# paths to data and folder for figures: USER MUST CHANGE
+dpath <- "~/version-control/sageseer/"
+fpath <- "~/version-control/sageseer/figures/"
 
 # List of "bad" sites
-bad <- c(495,496,497,498,580,581,583,632,633,634,668,62)
+#bad <- c(495,496,497,498,580,581,583,632,633,634,668,62)
 
 # Color Palette for GCMs (color-blind friendly)
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
@@ -30,12 +30,12 @@ cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 ################################################################################
 # Pull in data and manipulat
 # Caroline's list of bad points:
-car <- read.csv(paste(dpath, "AZ_pts_no_source_data.csv", sep=""))
+car <- read.csv(paste(dpath, "data/AZ_pts_no_source_data.csv", sep=""))
 carlat <- car$latitude
 carlon <- car$longitude
 
 # data from Andy's PCA script
-dat <- read.csv(paste(dpath, "pcapts.csv", sep=""))
+dat <- read.csv(paste(dpath, "data/pcapts.csv", sep=""))
 
 # Eliminate points on Caroline's "bad" list (WTF don't coords match??)
 dat$x2 <- round(dat$x,1)
@@ -136,11 +136,11 @@ dev.off()
 ################################################################################
 
 # Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "merged_data_GCM.csv", sep="")) %>%
+merged <- read.csv(paste(dpath, "data/merged_data_GCM.csv", sep="")) %>%
   mutate(change=(predicted-baseline))
 merged2 <- filter(merged, site %in% bad==FALSE)
 merged <- merged2
-unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) %>%
+unit <- read.csv(paste(dpath, "data/focal_sites_by_zone.csv", sep="")) %>%
   dplyr::select(site,elev:NA_L1NAME)
 
 ################################################################################
@@ -164,14 +164,13 @@ d2 <- m4 %>%
   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
   filter(n==max(n))
 dim(d2)
-d3 <- filter(d2, site %in% bad==FALSE)
 
 # Color Version:---------------------------------------------
 rcp85 <- merged %>% filter(scenario=="rcp85") %>%
   mutate(extirpated=ifelse(baseline>0&predicted==0,1,0))
 plot_raw_change <- function(data,  modeln, ylab,title) {
-  d <- data %>% dplyr::filter(model==modeln, scenario=="rcp85")
-  plot <- ggplot(data=d, aes(x=MAT,y=change)) +
+  d <- data %>% dplyr::filter(model==modeln)
+  plot <- ggplot(data=d, aes(x=bio1/10,y=change)) +
     geom_point(aes(color=GCM), size=.5) +
     scale_color_manual(values=cbPalette, name="GCM") +
     geom_hline(yintercept=0, linetype="dashed") +
@@ -193,7 +192,7 @@ plot_raw_change <- function(data,  modeln, ylab,title) {
   return(plot)
 }
 DGVM <- plot_raw_change(rcp85,modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DVM")
-CC <- plot_raw_change(rcp85,modeln="RandFor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
+CC <- plot_raw_change(rcp85,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
 AK <- plot_raw_change(rcp85,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
 DRS <- plot_raw_change(rcp85,modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="SS")
 AK
@@ -222,11 +221,11 @@ dev.off()
 CESM <- filter(merged, GCM=="CESM1-CAM5")
 plot_raw_change <- function(data,  modeln, ylab,title) {
   d <- data %>% dplyr::filter(model==modeln)
-  plot <- ggplot(data=d, aes(x=MAT,y=change)) +
-    geom_point(aes(color=scenario), size=.5) +
+  plot <- ggplot(data=d, aes(x=bio1/10,y=change)) +
+    geom_point(aes(color=scenario), size=.3) +
     scale_color_manual(values=c("grey","black"), name="Emissions\nScenario") +
     geom_hline(yintercept=0, linetype="dashed") +
-    stat_smooth(aes(fill=scenario, color=scenario),method = "lm") +
+    stat_smooth(aes(fill=scenario, color=scenario),method = "lm", size=.5) +
     scale_fill_manual(values=c("grey","black"), name="Emissions\nScenario") +
     ylab("Change in Response") +
     theme(legend.position="none", legend.title=element_blank(),
@@ -242,7 +241,7 @@ plot_raw_change <- function(data,  modeln, ylab,title) {
 }
 DGVM <- plot_raw_change(CESM,modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DVM")
 DGVM
-CC <- plot_raw_change(CESM,modeln="RandFor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
+CC <- plot_raw_change(CESM,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
 AK <- plot_raw_change(CESM,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
 DRS <- plot_raw_change(CESM,modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="SS")
 
@@ -298,7 +297,7 @@ AK <-
         legend.position="none")
 
 CC <- 
-  ggplot(data=m5[m5$model=="RandFor",], aes(x=scenario, y=meanchange, fill=GCM)) +
+  ggplot(data=m5[m5$model=="randfor",], aes(x=scenario, y=meanchange, fill=GCM)) +
   geom_bar(stat="identity", position=position_dodge(width=.9), color="black") +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
@@ -388,7 +387,7 @@ AK <-
         legend.position="none")
 
 CC <- 
-  ggplot(data=m5[m5$model=="RandFor",], aes(x=scenario, y=meanchange, fill=GCM)) +
+  ggplot(data=m5[m5$model=="randfor",], aes(x=scenario, y=meanchange, fill=GCM)) +
   geom_bar(stat="identity", position=position_dodge(width=.9), color="black") +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
@@ -466,7 +465,7 @@ dev.off()
 
 ################################################################################
 # Figure xx:
-# Boxplot showing mean climate by response category
+# Boxplot showing mean climate by response category (RCP8.5)
 ################################################################################
 d2 <- merged %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
@@ -492,13 +491,13 @@ ggplot(data=d2, aes(x=consensus,y=MAT, group=consensus)) +
 dev.off()
 
 ################################################################################
-# Plot the change/confidence on Andy's PCA axes
+# Plot the change/confidence on Andy's PCA axes (RCP8.5)
 ################################################################################
 # merge PCA back into manipulated data
 m2 <- merged %>% group_by(site) %>% summarise_each(funs(mean)) %>% 
   dplyr::select(site,Comp.1,Comp.2) %>%
   mutate(Comp.1_rev=Comp.1*-1)
-d3 <- merge(d2,m2, by="site", all=F) 
+d3 <- merge(d2,m2, by="site", all=F) # d2 is just RCP8.5
 dim(d3)
 gg3 <- 
   ggplot(data = d3, aes( x = Comp.1_rev, y = Comp.2, fill = conf2 )) + 
@@ -518,4 +517,39 @@ gg3 <-
 tiff(paste(fpath, "Fig6_PCA_model_agreement_color.tiff", sep=""),
     width = 80, height = 100, units = 'mm', res = 300)
 gg3
+dev.off()
+
+################################################################################
+# Make map showing change/confidence (RCP8.5)
+################################################################################
+m6 <- merged %>% group_by(site) %>%
+  summarise_each(funs(mean)) %>%
+  dplyr::select(site:latitude.x,bio1:bio19)
+mapdat <- merge(d2,m6,by="site",all.y=F) 
+md2 <- mapdat %>% group_by(site) %>%
+  summarise(conf2=mean(conf2), lat=mean(latitude.x), lon=mean(longitude.x))
+table(md2$conf2)
+
+png(paste(fpath, "map_agreement_rcp8.5.png", sep=""),
+    width = col1, height = col1, units = 'mm', res = 450)
+ggplot(data=md2, aes(y=lat, x=lon,fill=conf2)) +
+  geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="black") +
+  geom_point( size = 1,colour="black",pch=21) + 
+  #scale_fill_gradient2(name="Model\nAgreement\n") +
+  scale_fill_gradient2(low="red", high="blue",
+                       name="Model\nAgreement\n",
+                       breaks=c(-20,0,20),labels=c(-20,0,20),
+                       limits=c(-20,20)) +
+  ylab("Longitude") +
+  xlab("Latitude") +
+  coord_fixed(1.3) +
+  #theme(legend.justification=c(0,0), legend.position=c(0,0)) +
+  theme(legend.position="left") +
+  theme(legend.margin=unit(0, "cm"),
+        axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(), panel.background=element_blank(),
+        panel.border=element_blank(),panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),plot.background=element_blank())
 dev.off()
