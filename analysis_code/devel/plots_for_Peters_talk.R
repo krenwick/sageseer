@@ -15,7 +15,7 @@ fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 
 # List of "bad" sites
-bad <- c(495,496,497,498,580,581,583,632,633,634,668)
+bad <- c(495,496,497,498,580,581,583,632,633,634,668,62)
 
 # Pull in merged data and manipulate
 merged <- read.csv(paste(dpath, "merged_data_GCM.csv", sep="")) %>%
@@ -47,13 +47,6 @@ d2 <- m4 %>%
   filter(n==max(n))
 dim(d2)
 d3 <- filter(d2, site %in% bad==FALSE)
-bads <- filter(d2, site %in% bad)
-bads2 <- filter(merged, site %in% bad) %>% dplyr::select(site, model, baseline, change) %>%
-  filter(model!="MaxEntBin"&model!="MaxEntRaw")
-dim(d3)
-table(d3$conf2)
-table(d3$consensus)
-table(d2$consensus)
 
 # Data for Dominique
 latlon <- merged %>% group_by(site) %>% summarise(Lon=mean(longitude.x), Lat=mean(latitude.x))

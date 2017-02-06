@@ -39,7 +39,7 @@ m5
 # AK: temp biggest impact by far
 # CC:prcp, but only by a little
 # DRS: temp by a lot.
-# DGVM: temperature
+# DGVM: mixed
 
 # Plot change by scenario. Use 2 most realistic perturbations per variable
 # additional data wrangling:
@@ -52,7 +52,7 @@ m5 <- m3 %>% mutate(abschange=abs(change)) %>%
 head(m5)
 
 # Make a nice plot:
-ggplot(data=m5, aes(x=as.factor(mag), y=meanchange, fill=var)) +
+p1 <- ggplot(data=m5, aes(x=as.factor(mag), y=meanchange, fill=var)) +
   geom_bar(stat="identity", position=position_dodge(width=0.9)) +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
@@ -63,6 +63,40 @@ ggplot(data=m5, aes(x=as.factor(mag), y=meanchange, fill=var)) +
   xlab("Magnitude of Perturbation") +
   ylab("Mean Change in Model Response") +
   facet_wrap(~model,scale="free")
+p1
+png(paste(fpath, "temp-ppt-sensitivity_400ppm.png", sep=""),
+      width = 420, height = 250, units = 'mm', res = 450)
+p1
+dev.off()
+
+
+################################################################################
+# Re-do, deleting sites with zero baseline and zero future
+m5 <- m3 %>% mutate(abschange=abs(change)) %>%
+  mutate(direction=ifelse(change>0,"increase","decrease")) %>%
+  filter(baseline>0, predicted>0) %>%
+  group_by(model,var,mag, direction) %>%
+  summarise(meanchange=mean(change), lower=meanchange-sd(change)/sqrt(length(change)),
+            upper=meanchange+sd(change)/sqrt(length(change))) %>%
+  filter(mag!=1.2&mag!=.2)
+head(m5)
+p1 <- ggplot(data=m5, aes(x=as.factor(mag), y=meanchange, fill=var)) +
+  geom_bar(stat="identity", position=position_dodge(width=0.9)) +
+  geom_hline(yintercept=0) +
+  geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
+  scale_fill_manual(values=c("#56B4E9", "#E69F00"), 
+                    name="Variable",
+                    breaks=c("ppt", "temp"),
+                    labels=c("Precip", "Temp")) +
+  xlab("Magnitude of Perturbation") +
+  ylab("Mean Change in Model Response") +
+  facet_wrap(~model,scale="free")
+p1
+png(paste(fpath, "temp-ppt-sensitivity_400ppm-nozeros.png", sep=""),
+    width = 420, height = 250, units = 'mm', res = 450)
+p1
+dev.off()
+
 
 ## Would this look terrible as a boxlplot? YES- HARDER TO SEE PATTERN
 m5 <- m3 %>% mutate(abschange=abs(change)) %>%
