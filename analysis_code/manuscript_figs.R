@@ -7,20 +7,17 @@ library(rgdal)
 library(gridExtra)
 library(grid)
 
+#***USER MUST CHANGE***
+# paths to data and figure folders: Must use full path for readOGR to work
+dpath <- "/Users/poulterlab1/version-control/sageseer/"
+fpath <- "/Users/poulterlab1/version-control/sageseer/figures/"
+
 #----------------------------------------
 # Journal Specifications for figure size
 # Global Change Bio:
 col1 <- 80 # 1 column width = 80 mm
 col2 <- 169 # 2 column width = 169 mm
 #--------------------------------------
-
-# paths to data and folder for figures: USER MUST CHANGE
-dpath <- "~/version-control/sageseer/"
-fpath <- "~/version-control/sageseer/figures/"
-
-# List of "bad" sites
-#bad <- c(495,496,497,498,580,581,583,632,633,634,668,62)
-
 # Color Palette for GCMs (color-blind friendly)
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 
@@ -34,10 +31,10 @@ car <- read.csv(paste(dpath, "data/AZ_pts_no_source_data.csv", sep=""))
 carlat <- car$latitude
 carlon <- car$longitude
 
-# data from Andy's PCA script
+# data from Andy's PCA script (original full list of presence points)
 dat <- read.csv(paste(dpath, "data/pcapts.csv", sep=""))
 
-# Eliminate points on Caroline's "bad" list (WTF don't coords match??)
+# Eliminate points on Caroline's "bad" list (WTH don't coords match??)
 dat$x2 <- round(dat$x,1)
 dat$y2 <- round(dat$y,1)
 carlat<- round(carlat,1)
@@ -47,7 +44,7 @@ dat2$Comp.1 <- dat2$Comp.1*-1
 out<- dat2
 
 # get shapefile for US map
-states <- readOGR("/Users/poulterlab1/Documents/GIS_baselayers", "states")
+states <- readOGR(paste(dpath, "data/GIS_baselayers", sep=""), "states")
 wus <- states[states$STATE_ABBR=="WA"|states$STATE_ABBR=="OR"|states$STATE_ABBR=="CA"
               |states$STATE_ABBR=="ID"|states$STATE_ABBR=="NV"|states$STATE_ABBR=="MT"
               |states$STATE_ABBR=="UT"|states$STATE_ABBR=="NM"|states$STATE_ABBR=="WY"
