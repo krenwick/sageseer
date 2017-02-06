@@ -1,0 +1,303 @@
+---
+title: "Options for grouping sites"
+author: "Katie Renwick"
+date: ""
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Possibly ways to group sites
+1. Sagegrouse management units
+2. Elevation within management unit
+3. Elevation classes
+4. Original climate groupings from Andy's PCA
+5. Ecotypes (US Level 3 or NA Level 2)
+6. Kuchler PNV types
+7. Any other ideas???
+
+
+```{r, echo=FALSE, include=F}
+# intro code to read in and organize data
+rm(list=ls())
+library(ggplot2); theme_set(theme_bw(base_size=20)) # sized for ppt
+library(gridExtra)
+library(splines)
+library(colorspace)
+library(rgdal)
+library(dplyr) # must load ggplot first!
+library(tidyr)
+library(knitr)
+library(xtable)
+
+# paths to data and folder for figures
+dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
+fpath <- "/Users/poulterlab1/Documents/sageseer/Figures/"
+opath <- "/Users/poulterlab1/Documents/sageseer/"
+
+# Pull in merged data and manipulate
+merged <- read.csv(paste(dpath, "merged_data-co2.csv", sep=""))
+m3 <- merged %>%
+  mutate(change=predicted-baseline) %>%
+  mutate(direction=ifelse(change>0,"Positive","Negative")) %>%
+  na.omit() %>%
+  dplyr::select(site,model:predicted,change,direction)
+unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) 
+
+du <- merge(m3,unit, by="site") 
+
+# Function to add sample size to boxplots:
+give.n <- function(x){
+  return(c(y = median(x)*3, label = length(x))) 
+  # experiment with the multiplier (3) to find the perfect position
+}
+```
+
+## 1. Sagegrouse management units
+- Note sites not well distributed- ex. small sample in unit 6
+- Some sites aren't in a management zone at all
+- bird-centric, may not split sagebrush response in informative manner
+
+```{r, echo = F,  results='asis',message=F}
+# Code to map management units and show where the points fall
+# Include table with sample size in each Mgmt Unit
+d2 <- filter(du, var=="temp", mag==4)
+t <- table(d2$model,d2$Mgmt_zone, useNA = "ifany")
+TS <- t[1,]
+Others <- t[3,]
+nums <- rbind(TS,Others)
+print(xtable(nums), scalebox='0.75',comment=F)
+```
+
+## Mgmt units: modeled response to 4C temperature increase
+
+```{r, echo = F, fig.width = 15, fig.height = 10,  results='asis',message=F}
+################################################################################
+# Make bar plots showing change within each Mgmt. unit
+################################################################################
+d <- dplyr::filter(du, mag==4 & var=="temp")
+ggplot(data=d, aes(x=Mgmt_zone,y=change, fill=model)) +
+    geom_boxplot(notch=T) +
+    ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+    legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") #+
+ # scale_y_continuous(limits=c(-50,50)) +
+  #stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               #position = position_dodge(width = 0.75)) # label with sample size
+
+```
+
+## Elevation within mgmt unit
+- problem: not enough sites to split into elev categories, also not a strong response to elev
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+# look at scatter- does elevation matter?
+d <- dplyr::filter(du, mag==4 & var=="temp")
+ggplot(data=d, aes(x=elev,y=change, color=model)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_hline(yintercept=0,linetype="dashed") +
+  facet_wrap(~Name)
+# ultimately, mgmt zone doesn't seem like a good classifier. Based on mgmt/
+# sage grouse, so not surprising that doesn't work well for a plant
+
+```
+
+## Elevation bands alone
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp") %>%
+  mutate(elev_cat=cut(elev, breaks=c(0,1000,1500,2000,2500,3000,4000), 
+                      include.lowest=TRUE, labels=c("<1k","1k-1.5k","1.5k-2k","2k-2.5k","2.5k-3k",">3k")))
+ggplot(data=d, aes(x=elev_cat,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  xlab("Elevation Bin (m)") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75))
+
+```
+
+## Bands could be better. Look at full data set:
+- all except DGVM suggest a cut-off between 1000-2000m
+- elevation is really a proxy though- I'd rather stick with the MAT gradient if managers are okay with it.
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+# at this point, I'd rather just stick to the MAT plots
+d <- dplyr::filter(du, mag==4 & var=="temp") 
+ggplot(data=d, aes(x=elev,y=change, color=model)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  facet_wrap(~model, scales="free")
+
+```
+
+## Original climate groupings from Andy's PCA
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp") 
+ggplot(data=d, aes(x=climate,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## What if I split these by ring? Not showing core.
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp" & climate!="core")
+ggplot(data=d, aes(x=rings,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  facet_wrap(~climate)
+```
+
+## US Level 3 Ecoregions: sites per region
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+# Include table with sample size in each Mgmt Unit
+d2 <- dplyr::filter(du, var=="temp", mag==4)
+t <- table(d2$model,d2$US_L3NAME, useNA = "ifany")
+TS <- t[1,]
+Others <- t[3,]
+nums <- cbind.data.frame(TS,Others)
+nums2 <- nums[order(nums$Others),]
+print(xtable(nums2), scalebox='0.75',comment=F)
+```
+
+## US Level 3 Ecoregions: Issues
+- I eliminated the ecoregions with < 15 observations per model
+- this eliminates a lot, and there are still too many categories. Can I lump them based on response? Proximity? Ecological characteristics?
+
+## Sites grouped by ecoregion
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp") 
+# which ecoregions do I have enough obs for?
+d2 <-d %>% group_by(model,US_L3NAME) %>% mutate(n=n()) %>% filter(n>=15) %>% ungroup()
+ggplot(data=d2, aes(x=US_L3NAME,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+## Sites grouped by L2 ecoregion (categories more general)
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp")
+ggplot(data=d, aes(x=NA_L2NAME,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+## Sites grouped by Kuchler PNV types: sample size
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d2 <- dplyr::filter(du, var=="temp", mag==4)
+t <- table(d2$model,d2$PNV_GROUPS, useNA = "ifany")
+TS <- t[1,]
+Others <- t[3,]
+nums <- cbind.data.frame(TS,Others)
+nums2 <- nums[order(nums$Others),]
+print(xtable(nums2), scalebox='0.75',comment=F)
+
+```
+
+## Sites grouped by Kuchler PNV types
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp")
+ggplot(data=d, aes(x=PNV_GROUPS,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+## Sites grouped by Kuchler PNV types: lumped into categories (shapefile from Peter?)
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp")
+ggplot(data=d, aes(x=VEGTYP_LAB,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## Sites grouped by resistance and resilience classes
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp")
+# cut sites with zero or NA
+d2 <- filter(d, RR_class_name!=0) %>% na.omit()
+ggplot(data=d2, aes(x=RR_class_name,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+## Sites grouped by temp/moisutre regime
+
+```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
+d <- dplyr::filter(du, mag==4 & var=="temp")
+# cut sites with zero or NA
+d2 <- filter(d, RR_class_name!=0) %>% na.omit()
+ggplot(data=d, aes(x=common_name,y=change, color=model)) +
+  geom_boxplot(notch=F) +
+  ylab("Change in Response") +
+  theme(panel.background=element_blank(),plot.background=element_blank(),
+        legend.text.align = 0) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_summary(fun.data = give.n, geom = "text", fun.y = median,
+               position = position_dodge(width = 0.75)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
