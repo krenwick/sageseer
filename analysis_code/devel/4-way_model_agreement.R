@@ -11,18 +11,15 @@ library(rgdal)
 library(dplyr) # must load ggplot first!
 library(tidyr)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Documents/sageseer/Figures/"
-opath <- "/Users/poulterlab1/Documents/sageseer/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+setwd("/Users/poulterlab1/version-control/sageseer/")
 
-# List of "bad" sites
-bad <- c(495,496,497,498,580,581,583,632,633,634,668)
+# folder path:
+dpath <- "data/"
+fpath <- "figures/"
 
 # Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "merged_data-co2.csv", sep=""))
-merged2 <- filter(merged, site %in% bad==FALSE)
-merged <- merged2
+merged <- read.csv(paste(dpath, "merged_data_perturb.csv", sep=""))
 m3 <- merged %>%
   mutate(change=predicted-baseline) %>%
   mutate(direction=ifelse(change>0,"Positive","Negative")) 
@@ -64,8 +61,7 @@ d3 <- d2 %>% select(-change) %>%
   mutate(issue=ifelse(AK!=DRS&AK==CC&AK==DGVM,"GISSM",issue)) %>%
   mutate(issue=ifelse(CC==DRS&CC==DGVM&CC!=AK,"TS",issue))
 
-# Disagreement Table
-# Note: only includes siets for which Andy made prediction
+# Disagreement Table: which model disagrees?
 table(d3$issue)
 
 # What about direction?
@@ -134,7 +130,7 @@ bioclimNames <- c("MAT", # BIO1 = Annual Mean Temperature
 # bio clim column names  
 # ----------------------------------------------------------
 m7 <- m6 %>%
-  select(MAT:bio19)
+  select(bio1:bio19)
 names(m7) <- bioclimNames
 
 # Which bioclim varaibles are highly correlated?

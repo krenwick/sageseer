@@ -23,12 +23,15 @@ library(data.table)
 library(knitr)
 library(GGally)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+#setwd("/Users/poulterlab1/version-control/sageseer/")
+
+# folder path:
+dpath <- "/Users/poulterlab1/version-control/sageseer/data/"
+opath <- "/Users/poulterlab1/version-control/sageseer/figures/"
 
 # Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "merged_data.csv", sep=""))
+merged <- read.csv(paste(dpath, "merged_data_perturb.csv", sep=""))
 m3 <- merged %>%
   mutate(change=predicted-baseline) %>%
   mutate(direction=ifelse(change>0,"Positive","Negative")) %>%
@@ -80,33 +83,33 @@ ggcorr(d[,3:6])
 ```
 
 ```{r, echo = F, fig.width = 8.5, fig.height = 11,  results='asis',message=F}
-ggpairs(d[,2:6],
-        mapping = ggplot2::aes(color = climate))
+#ggpairs(d[,2:6],
+        #mapping = ggplot2::aes(color = climate))
 ```
 
 ```{r, echo = F, fig.width = 14, fig.height = 10,  results='asis',message=F}
-ggplot(data=d, aes(x=CC,y=DGVM)) +
+ggplot(data=d, aes(x=randfor,y=`DGVM-full-400ppm`)) +
     geom_point(aes(color=climate)) +
     geom_hline(yintercept=0, linetype="dashed") +
     geom_vline(xintercept=0, linetype="dashed") +
     geom_smooth(method="lm") +
   stat_ellipse()
-ggplot(data=d, aes(x=CC,y=DRS)) +
+ggplot(data=d, aes(x=randfor,y=DRS)) +
   geom_point(aes(color=climate)) +
   geom_hline(yintercept=0, linetype="dashed") +
   geom_vline(xintercept=0, linetype="dashed") +
   geom_smooth(method="lm")
-ggplot(data=d, aes(x=DGVM,y=DRS)) +
+ggplot(data=d, aes(x=`DGVM-full-400ppm`,y=DRS)) +
   geom_point(aes(color=climate)) +
   geom_hline(yintercept=0, linetype="dashed") +
   geom_vline(xintercept=0, linetype="dashed") +
   geom_smooth(method="lm")
-ggplot(data=d, aes(x=DGVM,y=AK)) +
+ggplot(data=d, aes(x=`DGVM-full-400ppm`,y=AK)) +
   geom_point(aes(color=climate)) +
   geom_hline(yintercept=0, linetype="dashed") +
   geom_vline(xintercept=0, linetype="dashed") +
   geom_smooth(method="lm")
-ggplot(data=d, aes(x=CC,y=AK)) +
+ggplot(data=d, aes(x=randfor,y=AK)) +
   geom_point(aes(color=climate)) +
   geom_hline(yintercept=0, linetype="dashed") +
   geom_vline(xintercept=0, linetype="dashed") +

@@ -7,21 +7,19 @@ library(tidyverse); theme_set(theme_bw(base_size=20)) # sized for ppt
 library(gridExtra)
 library(splines)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+setwd("/Users/poulterlab1/version-control/sageseer/")
+
+# folder path:
+dpath <- "data/"
+opath <- "figures/"
 
 # Color Palette for GCMs (color-blind friendly)
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 
-# List of "bad" sites
-bad <- c(495,496,497,498,580,581,583,632,633,634,668,62)
-
 # Pull in merged data and manipulate
 merged <- read.csv(paste(dpath, "merged_data_GCM.csv", sep="")) %>%
   mutate(change=(predicted-baseline))
-merged2 <- filter(merged, site %in% bad==FALSE)
-merged <- merged2
 unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) %>%
   dplyr::select(site,elev:NA_L1NAME)
 
@@ -44,9 +42,11 @@ d2 <- m4 %>%
   mutate(rel_conf_cat=conf_cat/n) %>%
   mutate(consensus=ifelse(conf_cat==n.increase,"increase","decrease")) %>%
   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
+  mutate(rel_cat2=ifelse(consensus=="decrease", rel_conf_cat*-1, rel_conf_cat)) %>%
   filter(n==max(n))
 dim(d2)
-d3 <- filter(d2, site %in% bad==FALSE)
+head(d2)
+hist(d2$rel_cat2)
 
 # Data for Dominique
 latlon <- merged %>% group_by(site) %>% summarise(Lon=mean(longitude.x), Lat=mean(latitude.x))

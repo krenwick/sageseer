@@ -7,9 +7,12 @@ library(tidyverse); theme_set(theme_bw(base_size=20)) # sized for ppt
 library(gridExtra)
 library(splines)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/version-control/sageseer/data/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+setwd("/Users/poulterlab1/version-control/sageseer/")
+
+# folder path:
+dpath <- "data/"
+opath <- "figures/"
 
 # Color Palette for GCMs (color-blind friendly)
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
@@ -29,7 +32,7 @@ m4 <- merged %>%
   dplyr::select(site:GCM,change,cat) %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") 
 
-write.csv(m4, "~/Documents/sagemodeldata.csv")
+#write.csv(m4, "~/Documents/sagemodeldata.csv")
 
 d2 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%

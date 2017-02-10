@@ -1,19 +1,21 @@
 #############################################################################
 # Make table: consensus and direction
-# Code created Sep 2016
+# Code created Sep 2016, update Feb. 2017
 #############################################################################
 rm(list=ls())
 library(ggplot2); theme_set(theme_bw(base_size=20)) # sized for ppt
 library(dplyr) # must load ggplot first!
 library(tidyr)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Documents/sageseer/Figures/"
-opath <- "/Users/poulterlab1/Documents/sageseer/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+setwd("/Users/poulterlab1/version-control/sageseer/")
+
+# folder path:
+dpath <- "data/"
+opath <- "figures/"
 
 # Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "merged_data-co2.csv", sep=""))
+merged <- read.csv(paste(dpath, "merged_data_perturb.csv", sep=""))
 m3 <- merged %>%
   mutate(change=predicted-baseline) %>%
   mutate(direction=ifelse(change>0,"Positive","Negative")) %>%
@@ -67,7 +69,7 @@ results <- rbind(results,cbind(var="ppt",mag=.9,direction_change(m4,.9,"ppt")))
 results <- rbind(results,cbind(var="ppt",mag=1.1,direction_change(m4,1.1,"ppt")))
 results <- rbind(results,cbind(var="ppt",mag=1.2,direction_change(m4,1.2,"ppt")))
 
-write.csv(results,paste(fpath,"consensus_table.csv",sep=""),row.names=F)
+write.csv(results,paste(opath,"consensus_table.csv",sep=""),row.names=F)
 
 
 

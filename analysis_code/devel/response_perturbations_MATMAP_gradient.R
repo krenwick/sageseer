@@ -8,15 +8,16 @@ library(gridExtra)
 library(splines)
 library(wesanderson)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+setwd("/Users/poulterlab1/version-control/sageseer/")
+#################################
 
-# functions for plotting
-source("/Users/poulterlab1/Box Sync/sageseer/ModelComparison/code/plotting_functions.R")
+# folder path:
+dpath <- "data/"
+opath <- "figures/"
 
 # Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "merged_data-co2.csv", sep=""))
+merged <- read.csv(paste(dpath, "merged_data_perturb.csv", sep=""))
 m3 <- merged %>%
   mutate(change=predicted-baseline) %>%
   mutate(direction=ifelse(change>0,"Positive","Negative")) %>%
@@ -30,7 +31,7 @@ m4 <- gather(m3, baseline:predicted,key=time,value=value)
 # Plot response to temp manipulations along temp gradient
 plot_raw_change <- function(modeln, ylab,varn,title) {
   d <- dplyr::filter(m3,var==varn & model==modeln)
-  plot <- ggplot(data=d, aes(x=MAT,y=change, color=as.factor(mag))) +
+  plot <- ggplot(data=d, aes(x=bio1/10,y=change, color=as.factor(mag))) +
     geom_point() +
     geom_hline(yintercept=0, linetype="dashed") +
     stat_smooth(method = "lm",aes(fill=as.factor(mag))) +
@@ -52,8 +53,8 @@ plot_raw_change <- function(modeln, ylab,varn,title) {
   return(plot)
 }
 DRS <- plot_raw_change(modeln="DRS", ylab=expression(paste(Delta," % Yrs with Regen")), varn="temp", title="GISSM")
-DGVM <- plot_raw_change(modeln="DGVM", ylab=expression(paste(Delta," % Cover")),varn="temp", title="DGVM")
-CC <- plot_raw_change(modeln="CC", ylab=expression(paste(Delta," Max % Cover")),varn="temp", title="RF")
+DGVM <- plot_raw_change(modeln="DGVM-full-400ppm", ylab=expression(paste(Delta," % Cover")),varn="temp", title="DGVM")
+randfor <- plot_raw_change(modeln="randfor", ylab=expression(paste(Delta," Max % Cover")),varn="temp", title="RF")
 AK <- plot_raw_change(modeln="AK", ylab=expression(paste(Delta," % Cover")),varn="temp", title="TS")
 
 # make legend
@@ -69,7 +70,7 @@ legend <- get_legend(leg2)
 
 jpeg(paste(fpath, "change_by_mag_temp.jpeg", sep=""),
      width = 420, height = 320, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(AK,DRS,CC,DGVM, ncol=2), ncol=1,
+grid.arrange(legend, arrangeGrob(AK,DRS,randfor,DGVM, ncol=2), ncol=1,
              heights = c(0.15, 2.5,0))
 dev.off()
 
@@ -77,7 +78,7 @@ dev.off()
 # Plot response to precipitation manipulations along temp gradient
 plot_raw_changeP <- function(modeln, ylab,varn,title) {
   d <- dplyr::filter(m3,var==varn & model==modeln)
-  plot <- ggplot(data=d, aes(x=MAT,y=change, color=as.factor(mag))) +
+  plot <- ggplot(data=d, aes(x=bio1/10,y=change, color=as.factor(mag))) +
     geom_point() +
     geom_hline(yintercept=0, linetype="dashed") +
     stat_smooth(method = "lm",aes(fill=as.factor(mag))) +
@@ -97,8 +98,8 @@ plot_raw_changeP <- function(modeln, ylab,varn,title) {
   return(plot)
 }
 DRS <- plot_raw_changeP(modeln="DRS", ylab=expression(paste(Delta," % Yrs with Regen")), varn="ppt", title="GISSM")
-DGVM <- plot_raw_changeP(modeln="DGVM", ylab=expression(paste(Delta," % Cover")),varn="ppt", title="DGVM")
-CC <- plot_raw_changeP(modeln="CC", ylab=expression(paste(Delta," Max % Cover")),varn="ppt", title="RF")
+DGVM <- plot_raw_changeP(modeln="DGVM-full-400ppm", ylab=expression(paste(Delta," % Cover")),varn="ppt", title="DGVM")
+randfor <- plot_raw_changeP(modeln="randfor", ylab=expression(paste(Delta," Max % Cover")),varn="ppt", title="RF")
 AK <- plot_raw_changeP(modeln="AK", ylab=expression(paste(Delta," % Cover")),varn="ppt", title="TS")
 
 # make legend
@@ -114,7 +115,7 @@ legend <- get_legend(leg2)
 
 jpeg(paste(fpath, "change_by_mag_ppt.jpeg", sep=""),
      width = 420, height = 320, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(AK,DRS,CC,DGVM, ncol=2), ncol=1,
+grid.arrange(legend, arrangeGrob(AK,DRS,randfor,DGVM, ncol=2), ncol=1,
              heights = c(0.15, 2.5,0))
 dev.off()
 
@@ -142,8 +143,8 @@ plot_raw_change <- function(modeln, ylab,varn,title) {
   return(plot)
 }
 DRS <- plot_raw_change(modeln="DRS", ylab=expression(paste(Delta," % Yrs with Regen")), varn="ppt", title="GISSM")
-DGVM <- plot_raw_change(modeln="DGVM", ylab=expression(paste(Delta," % Cover")),varn="ppt", title="DGVM")
-CC <- plot_raw_change(modeln="CC", ylab=expression(paste(Delta," Max % Cover")),varn="ppt", title="RF")
+DGVM <- plot_raw_change(modeln="DGVM-full-400ppm", ylab=expression(paste(Delta," % Cover")),varn="ppt", title="DGVM")
+randfor <- plot_raw_change(modeln="randfor", ylab=expression(paste(Delta," Max % Cover")),varn="ppt", title="RF")
 AK <- plot_raw_change(modeln="AK", ylab=expression(paste(Delta," % Cover")),varn="ppt", title="TS")
 
 # make legend
@@ -159,7 +160,7 @@ legend <- get_legend(leg2)
 
 jpeg(paste(fpath, "change_by_mag_ppt_ppt_grad.jpeg", sep=""),
      width = 420, height = 320, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(AK,DRS,CC,DGVM, ncol=2), ncol=1,
+grid.arrange(legend, arrangeGrob(AK,DRS,randfor,DGVM, ncol=2), ncol=1,
              heights = c(0.15, 2.5,0))
 dev.off()
 
@@ -189,8 +190,8 @@ plot_raw_change <- function(modeln, ylab,varn,title) {
   return(plot)
 }
 DRS <- plot_raw_change(modeln="DRS", ylab=expression(paste(Delta," % Yrs with Regen")), varn="temp", title="GISSM")
-DGVM <- plot_raw_change(modeln="DGVM", ylab=expression(paste(Delta," % Cover")),varn="temp", title="DGVM")
-CC <- plot_raw_change(modeln="CC", ylab=expression(paste(Delta," Max % Cover")),varn="temp", title="RF")
+DGVM <- plot_raw_change(modeln="DGVM-full-400ppm", ylab=expression(paste(Delta," % Cover")),varn="temp", title="DGVM")
+randfor <- plot_raw_change(modeln="randfor", ylab=expression(paste(Delta," Max % Cover")),varn="temp", title="RF")
 AK <- plot_raw_change(modeln="AK", ylab=expression(paste(Delta," % Cover")),varn="temp", title="TS")
 
 # make legend
@@ -206,7 +207,7 @@ legend <- get_legend(leg2)
 
 jpeg(paste(fpath, "change_by_mag_temp.jpeg", sep=""),
      width = 420, height = 320, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(AK,DRS,CC,DGVM, ncol=2), ncol=1,
+grid.arrange(legend, arrangeGrob(AK,DRS,randfor,DGVM, ncol=2), ncol=1,
              heights = c(0.15, 2.5,0))
 dev.off()
 
@@ -234,15 +235,15 @@ plot_raw_change <- function(modeln, ylab,magn,varn,title) {
   return(plot)
 }
 DRS <- plot_raw_change(modeln="DRS", ylab=expression(paste(Delta," % Yrs with Regen")), varn="temp", title="GISSM")
-DGVM <- plot_raw_change(modeln="DGVM", ylab=expression(paste(Delta," % Cover")),varn="temp", title="DGVM")
-CC <- plot_raw_change(modeln="CC", ylab=expression(paste(Delta," Max % Cover")),varn="temp", title="RF")
+DGVM <- plot_raw_change(modeln="DGVM-full-400ppm", ylab=expression(paste(Delta," % Cover")),varn="temp", title="DGVM")
+randfor <- plot_raw_change(modeln="randfor", ylab=expression(paste(Delta," Max % Cover")),varn="temp", title="RF")
 AK <- plot_raw_change(modeln="AK", ylab=expression(paste(Delta," % Cover")),varn="temp", title="TS")
 DGVM
 
 # Save Plot
 jpeg(paste(fpath, "change_temp_cuthot.jpeg", sep=""),
      width = 420, height = 200, units = 'mm', res = 300)
-grid.arrange(CC,AK,DGVM,DRS, ncol=4)
+grid.arrange(randfor,AK,DGVM,DRS, ncol=4)
 dev.off()
 
 

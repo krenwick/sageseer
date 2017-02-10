@@ -5,25 +5,25 @@
 # small changes from AK
 #############################################################################
 rm(list=ls())
+# Always load ggplot before dplyr or summarize won't work (plyr conflict)
+library(ggplot2); theme_set(theme_bw(base_size=20)) # sized for ppt
 library(dplyr)
 library(tidyr)
-library(ggplot2); theme_set(theme_bw(base_size=20)) # sized for ppt
 library(gridExtra)
 library(splines)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+setwd("/Users/poulterlab1/version-control/sageseer/")
 
-# functions for plotting
-source("/Users/poulterlab1/Box Sync/sageseer/ModelComparison/code/plotting_functions.R")
+# folder path:
+dpath <- "data/"
+opath <- "figures/"
 
 # Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "merged_data-co2.csv", sep=""))
+merged <- read.csv(paste(dpath, "merged_data_perturb.csv", sep=""))
 m3 <- merged %>%
   mutate(change=predicted-baseline) %>%
-  mutate(direction=ifelse(change>0,"Positive","Negative")) %>%
-  na.omit() 
+  mutate(direction=ifelse(change>0,"Positive","Negative")) 
 m4 <- gather(m3, baseline:predicted,key=time,value=value)
 
 head(m3)
@@ -34,12 +34,17 @@ m5 <- m3 %>% mutate(abschange=abs(change)) %>%
   mutate(winner=rank(abschange)) %>%
   select(site,model:mag,abschange,winner) %>%
   group_by(model,var,mag) %>%
-  summarise(wins=sum(winner==6), n=n())
+  dplyr::summarise(wins=sum(winner==6), n=n())
 m5
-# AK: temp biggest impact by far
-# CC:prcp, but only by a little
-# DRS: temp by a lot.
-# DGVM: mixed
+
+# What if we separate precip vs. temp?
+m6 <- m3 %>% mutate(abschange=abs(change)) %>%
+  group_by(site,model,var) %>%
+  mutate(winner=rank(abschange)) %>%
+  select(site,model:mag,abschange,winner) %>%
+  group_by(model,var,mag) %>%
+  dplyr::summarise(wins=sum(winner==3), n=n())
+m6
 
 # Plot change by scenario. Use 2 most realistic perturbations per variable
 # additional data wrangling:
@@ -47,11 +52,12 @@ m5 <- m3 %>% mutate(abschange=abs(change)) %>%
   mutate(direction=ifelse(change>0,"increase","decrease")) %>%
   group_by(model,var,mag, direction) %>%
   summarise(meanchange=mean(change), lower=meanchange-sd(change)/sqrt(length(change)),
-            upper=meanchange+sd(change)/sqrt(length(change))) %>%
-  filter(mag!=1.2&mag!=.2)
+            upper=meanchange+sd(change)/sqrt(length(change))) #%>%
+  #filter(mag!=1.2&mag!=.2)
 head(m5)
 
 # Make a nice plot:
+m5$mag <- factor(m5$mag, levels=c(.9,1.1,1.2,.2,2,4), ordered=T)
 p1 <- ggplot(data=m5, aes(x=as.factor(mag), y=meanchange, fill=var)) +
   geom_bar(stat="identity", position=position_dodge(width=0.9)) +
   geom_hline(yintercept=0) +
@@ -68,6 +74,36 @@ png(paste(fpath, "temp-ppt-sensitivity_400ppm.png", sep=""),
       width = 420, height = 250, units = 'mm', res = 450)
 p1
 dev.off()
+
+###############################
+# Is direction of change consistent across levels of temp change?
+m5 <- m3 %>% mutate(abschange=abs(change)) %>%
+  mutate(direction=ifelse(change>0,"increase","decrease")) %>%
+  group_by(site, model, var) %>%
+  mutate(n.increase=sum(direction=="increase")) %>%
+  select(site:predicted,change:n.increase) %>%
+  group_by(model,var) %>%
+  summarise(dec=sum(n.increase==0)/3, inc=sum(n.increase==3)/3, agree=dec+inc)
+m5 # actually a lot of switches... what if I cut lowest level?
+
+# Look just at agreement for 2 & 4C, precip increases (2 levels each var)
+m5 <- m3 %>% mutate(abschange=abs(change)) %>%
+  mutate(direction=ifelse(change>0,"increase","decrease")) %>%
+  group_by(site, model, var) %>%
+  filter(mag!=.2, mag!=.9) %>%
+  mutate(n.increase=sum(direction=="increase")) %>%
+  select(site:predicted,change:n.increase) %>%
+  group_by(model,var) %>%
+  summarise(dec=sum(n.increase==0)/2, inc=sum(n.increase==2)/2, agree=dec+inc, perc=agree/714)
+m5
+# aggregate models
+m6 <- m5 %>% 
+  group_by(var) %>%
+  summarise(meanperc=mean(perc))
+m6
+
+
+
 
 
 ################################################################################
