@@ -291,7 +291,9 @@ AK <-
   ylab(expression(paste(Delta," % Cover"))) +
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none") +
+  annotate("text", x=-Inf, y = Inf, label = "TC", vjust=1.3, hjust=-.2, size=8)
+AK
 
 CC <- 
   ggplot(data=m5[m5$model=="randfor",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -305,7 +307,8 @@ CC <-
   #annotate("text", x=.5, y = Inf, label = "(a)", vjust=1.3, hjust=1.3, size=4) +
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none") +
+  annotate("text", x=-Inf, y = Inf, label = "SC", vjust=1.3, hjust=-.2, size=8)
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -317,7 +320,8 @@ KR <-
   ylab(expression(paste(Delta," % Cover"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none") +
+  annotate("text", x=-Inf, y = Inf, label = "DGVM", vjust=1.3, hjust=-.2, size=8)
 
 DRS <- 
   ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -329,7 +333,8 @@ DRS <-
   ylab(expression(paste(Delta," % Regen"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none") +
+  annotate("text", x=-Inf, y = Inf, label = "SS", vjust=1.3, hjust=-.2, size=8)
 
 # make legend
 leg <- ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
