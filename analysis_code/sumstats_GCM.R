@@ -44,6 +44,7 @@ m6 <- m4 %>% group_by(model, scenario) %>%
             perc=round(n.dec/(n.inc+n.dec),3))
 m6
 
+
 ################################################################################
 # Look at the magnitude of change
 # 1st: what is the range of pos + negative changes for each model?
@@ -52,12 +53,31 @@ m7 <- m4 %>% group_by(model, cat) %>%
             max=round(max(change),2), sd=round(sd(change),2))
 m7 #12-28
 
+# Calculate percent absolute agreement vs. consensus
+d2 <- m4 %>%
+  dplyr::select(site, model,scenario:GCM,change:cat) %>%
+  filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
+  group_by(site,GCM,scenario) %>%
+  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  mutate(conf2=n.increase-n.decrease) %>%
+  mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
+  mutate(rel_conf_cat=conf_cat/n) %>%
+  mutate(consensus=ifelse(conf_cat==n.increase,"increase","decrease")) %>%
+  mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
+  mutate(rel_cat2=ifelse(consensus=="decrease", rel_conf_cat*-1, rel_conf_cat)) %>%
+  filter(n==max(n))
+dim(d2)
+head(d2)
+round(table(d2$conf2)/7140,2)
+# perfectly agree 44% of time
+# consensus 83% of time
+
 ################
 # Look at correlations in predicted change between models
 # Use spearmans rank correlation, since can't assume parametric
 # for each model, take mean response across RCP x GCM combos
 m8 <- m4 %>% group_by(site, model) %>%
-  select(site,model,change) %>%
+  dplyr::select(site,model,change) %>%
     summarise_each(funs(mean)) %>%
   spread(model,change)
 m9 <- as.matrix(m8[,2:5])  
@@ -116,7 +136,7 @@ table(d3$scenario, d3$conf2)
 d4 <- d3 %>% group_by(scenario) %>%
   summarise(pos.high=sum(conf2>11), pos.low=sum(conf2<11&conf2>0),
             neg.high=sum(conf2<=-11), neg.low=sum(conf2>=-11&conf2<0))
-d4/714
+
 
 ######################################################
 # Look at min and max MAT for these categories
