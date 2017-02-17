@@ -8,21 +8,19 @@
 rm(list=ls())
 library(tidyverse); theme_set(theme_bw(base_size=20)) # sized for ppt
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+# set file path for sageseer- CHANGE BASED ON YOUR COMPUTER
+setwd("/Users/poulterlab1/version-control/sageseer/")
+
+# folder path:
+dpath <- "data/"
+opath <- "figures/"
 
 # Color Palette for GCMs (color-blind friendly)
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 
-# List of "bad" sites
-bad <- c(495,496,497,498,580,581,583,632,633,634,668,62)
-
 # Pull in merged data and manipulate
 merged <- read.csv(paste(dpath, "merged_data_GCM.csv", sep="")) %>%
   mutate(change=(predicted-baseline))
-merged2 <- filter(merged, site %in% bad==FALSE)
-merged <- merged2
 unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) %>%
   dplyr::select(site,elev:NA_L1NAME)
 
@@ -46,19 +44,24 @@ d2 <- m4 %>%
   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus))
 
 ############################## Which model disagrees?
-d3 <- d2 %>% select(-change,-n,-conf_cat,-rel_conf_cat) %>%
+d3 <- d2 %>% dplyr::select(-change,-n,-conf_cat,-rel_conf_cat) %>%
   spread(model, cat) %>%
   #filter(scenario!="rcp45") %>%
-  mutate(issue=ifelse(AK==GISSM_v1.6.3&AK==RandFor&AK==DGVM,"none","split")) %>%
-  mutate(issue=ifelse(AK==GISSM_v1.6.3&AK==RandFor&AK!=DGVM,"DGVM",issue)) %>%
-  mutate(issue=ifelse(AK==GISSM_v1.6.3&AK!=RandFor&AK==DGVM,"RF",issue)) %>%
-  mutate(issue=ifelse(AK!=GISSM_v1.6.3&AK==RandFor&AK==DGVM,"GISSM",issue)) %>%
-  mutate(issue=ifelse(RandFor==GISSM_v1.6.3&RandFor==DGVM&RandFor!=AK,"TS",issue))
+  mutate(issue=ifelse(AK==GISSM_v1.6.3&AK==randfor&AK==DGVM,"none","split")) %>%
+  mutate(issue=ifelse(AK==GISSM_v1.6.3&AK==randfor&AK!=DGVM,"DGVM",issue)) %>%
+  mutate(issue=ifelse(AK==GISSM_v1.6.3&AK!=randfor&AK==DGVM,"RF",issue)) %>%
+  mutate(issue=ifelse(AK!=GISSM_v1.6.3&AK==randfor&AK==DGVM,"GISSM",issue)) %>%
+  mutate(issue=ifelse(randfor==GISSM_v1.6.3&randfor==DGVM&randfor!=AK,"TS",issue))
 head(d3)
 
 # Disagreement Table
-# Note: only includes siets for which Andy made prediction
 table(d3$issue,d3$GCM)
+table(d3$issue,d3$GCM,d3$scenario)
+table(d3$issue, d3$GCM, d3$consensus)
+table(d3$issue, d3$scenario)
+
+# Across all scenarios: how often does each model disagree?
+round(table(d3$issue)/7140,2)
 
 # What about direction?
 table(d3$issue,d3$conf2)
@@ -70,10 +73,21 @@ round(table(d3$issue,d3$consensus)/3570, 2)
 # Look for climatic cause of differences
 ################################################################################
 clim <- merged %>% group_by(site) %>% summarise_each(funs(mean))
+
+##############################################
+# Look at disagreement along PCA axes
+###########################################
+d4 <- filter(d3, scenario=="rcp85", GCM=="CCSM4")
+p1 <- merge(d4,clim, by=c("site"), all.y=F)
+ggplot(data=p1, aes(x=Comp.1*-1,y=Comp.2, color=issue, shape=consensus)) +
+  geom_point()
+
+
+
 c1 <- filter(d3, consensus=="increase")
 c2 <- merge(c1,clim, by=c("site"), all.y=F)
 
-ggplot(data=c2, aes(x=issue, y=bio3)) +
+ggplot(data=c2, aes(x=issue, y=bio1)) +
   geom_boxplot(notch=T)
 # Time series disagrees on hot sites.
 # DGVM disagrees on sites with less seasonality (bio3, bio7)
