@@ -22,8 +22,7 @@ col2 <- 169 # 2 column width = 169 mm
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 
 ################################################################################
-# Figure 1:
-# Map sagebrush cover + presence points + focal points
+# Load and clean data for all figures
 ################################################################################
 # Pull in data and manipulat
 # Caroline's list of bad points:
@@ -50,8 +49,38 @@ wus <- states[states$STATE_ABBR=="WA"|states$STATE_ABBR=="OR"|states$STATE_ABBR=
               |states$STATE_ABBR=="UT"|states$STATE_ABBR=="NM"|states$STATE_ABBR=="WY"
               |states$STATE_ABBR=="CO"|states$STATE_ABBR=="AZ",]
 
+# Pull in merged model output and manipulate
+merged <- read.csv(paste(dpath, "data/merged_data_GCM.csv", sep="")) %>%
+  mutate(change=(predicted-baseline))
+unit <- read.csv(paste(dpath, "data/focal_sites_by_zone.csv", sep="")) %>%
+  dplyr::select(site,elev:NA_L1NAME)
+
+# Calculate change and direction:
+m4 <- merged %>% 
+  mutate(cat=ifelse(change>0, "increase", "decrease")) %>%
+  # uncomment next line to add "nochange" back in
+  #mutate(cat=ifelse(change==0, "nochange", cat)) %>%
+  dplyr::select(site:GCM,change,cat)
+
+d2 <- m4 %>%
+  dplyr::select(site, model,scenario:GCM,change:cat) %>%
+  filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
+  filter(scenario=="rcp85") %>% #exclude RCP4.5 output
+  group_by(site) %>%
+  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  mutate(conf2=n.increase-n.decrease) %>%
+  mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
+  mutate(rel_conf_cat=conf_cat/n) %>%
+  mutate(consensus=ifelse(conf_cat==n.increase,"increase","decrease")) %>%
+  mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
+  filter(n==max(n))
+dim(d2)
+
 ################################################################################
-# Plot PCA with grid
+# Figure 1:
+# Map sagebrush cover + presence points + focal points
+################################################################################
+# 1. Plot PCA with grid
 
 # shortcuts for column names 
 ll <- c('x', 'y') # lat long 
@@ -81,7 +110,7 @@ p2 <- ggplot(data=out, aes(x=Comp.1, y=Comp.2)) +
   #annotate("text", label = "(a)", x = -11.5, y = 14.6, fontface = 2) 
 
 ###############################
-# Create map working with same data as PCA
+# 2. Create map working with same data as PCA
 # Wrangle data into tidy frame
 out2 <- out %>% 
   mutate(type=ifelse(LT_data==1, "LT", "fix")) %>%
@@ -132,36 +161,6 @@ dev.off()
 # Scatterplot along MAT gradient, various GCMS, RCP8.5
 ################################################################################
 
-# Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "data/merged_data_GCM.csv", sep="")) %>%
-  mutate(change=(predicted-baseline))
-merged2 <- filter(merged, site %in% bad==FALSE)
-merged <- merged2
-unit <- read.csv(paste(dpath, "data/focal_sites_by_zone.csv", sep="")) %>%
-  dplyr::select(site,elev:NA_L1NAME)
-
-################################################################################
-# Calculate change and direction:
-m4 <- merged %>% 
-  mutate(cat=ifelse(change>0, "increase", "decrease")) %>%
-  # uncomment next line to add "nochange" back in
-  #mutate(cat=ifelse(change==0, "nochange", cat)) %>%
-  dplyr::select(site:GCM,change,cat)
-
-d2 <- m4 %>%
-  dplyr::select(site, model,scenario:GCM,change:cat) %>%
-  filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
-  filter(scenario=="rcp85") %>% #exclude RCP4.5 output
-  group_by(site) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
-  mutate(conf2=n.increase-n.decrease) %>%
-  mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
-  mutate(rel_conf_cat=conf_cat/n) %>%
-  mutate(consensus=ifelse(conf_cat==n.increase,"increase","decrease")) %>%
-  mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
-  filter(n==max(n))
-dim(d2)
-
 # Color Version:---------------------------------------------
 rcp85 <- merged %>% filter(scenario=="rcp85") %>%
   mutate(extirpated=ifelse(baseline>0&predicted==0,1,0))
@@ -171,9 +170,9 @@ plot_raw_change <- function(data,  modeln, ylab,title) {
     geom_point(aes(color=GCM), size=.5) +
     scale_color_manual(values=cbPalette, name="GCM") +
     geom_hline(yintercept=0, linetype="dashed") +
-    #stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+    stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
     #stat_smooth(aes(fill=GCM, color=GCM)) +
-    #scale_fill_manual(values=cbPalette, name="GCM") +
+    scale_fill_manual(values=cbPalette, name="GCM") +
     ylab("Change in Response") +
     theme(legend.position="none", legend.title=element_blank(),
           panel.background=element_blank(),plot.background=element_blank(),
@@ -206,7 +205,7 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save Plot
-tiff(paste(fpath, "Fig4_change_GCM_rcp85_color_noline.tiff", sep=""),
+tiff(paste(fpath, "Fig4_change_GCM_rcp85_color_line.tiff", sep=""),
     width = 169, height = 169, units = 'mm', res = 300)
 grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
              heights = unit(c(9,160), "mm"))
@@ -259,6 +258,61 @@ tiff(paste(fpath, "Fig4_change_scenario_CESM_bw.tiff", sep=""),
 grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
              heights = unit(c(9,160), "mm"))
 
+dev.off()
+
+################################################################################
+# Figure xx (supplemental 3?)
+# Scatterplot along precip gradient, various GCMS, RCP8.5
+################################################################################
+# Color Version:---------------------------------------------
+rcp85 <- merged %>% filter(scenario=="rcp85") %>%
+  mutate(extirpated=ifelse(baseline>0&predicted==0,1,0))
+plot_raw_change <- function(data,  modeln, ylab,title) {
+  d <- data %>% dplyr::filter(model==modeln)
+  plot <- ggplot(data=d, aes(x=bio12,y=change)) +
+    geom_point(aes(color=GCM), size=.5) +
+    scale_color_manual(values=cbPalette, name="GCM") +
+    geom_hline(yintercept=0, linetype="dashed") +
+    stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+    #stat_smooth(aes(fill=GCM, color=GCM)) +
+    scale_fill_manual(values=cbPalette, name="GCM") +
+    ylab("Change in Response") +
+    theme(legend.position="none", legend.title=element_blank(),
+          panel.background=element_blank(),plot.background=element_blank(),
+          panel.grid.major=element_blank(), 
+          panel.grid.minor=element_blank(),
+          legend.text.align = 0,
+          plot.margin=unit(c(.1,.1,.1,.1), "cm"),
+          axis.title.y = element_text(size = rel(1.3))) +
+    xlab("Mean Annual Precipitation (mm)") +
+    #scale_x_continuous(limits=c(-1.9,20.8)) +
+    ylab(ylab) +
+    annotate("text", x=Inf, y = Inf, label = title, vjust=1.3, hjust=1.3, size=4)
+  return(plot)
+}
+DGVM <- plot_raw_change(rcp85,modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DVM")
+DGVM
+CC <- plot_raw_change(rcp85,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
+AK <- plot_raw_change(rcp85,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
+DRS <- plot_raw_change(rcp85,modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="SS")
+AK
+
+# make legend
+leg <- plot_raw_change(merged,modeln="AK", ylab="", title="TC")
+leg2 <- leg + theme(legend.position="top")
+get_legend<-function(myggplot){
+  tmp <- ggplot_gtable(ggplot_build(myggplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+legend <- get_legend(leg2)
+
+# Save Plot
+tiff(paste(fpath, "SS3_change_GCM_rcp85_pptgradient.tiff", sep=""),
+     width = 169, height = 169, units = 'mm', res = 300)
+grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
+             heights = unit(c(9,160), "mm"))
 dev.off()
 
 ################################################################################
@@ -490,6 +544,105 @@ ggplot(data=d2, aes(x=consensus,y=MAT, group=consensus)) +
   coord_flip() +
   xlab("Change in Performance") +
   ylab("Mean Annual Temperature")
+dev.off()
+
+# Make color for poster, and flip like the old one
+myCols = c("red3","dodgerblue3")
+ggplot(data=d2[d2$consensus!="Unsure",], aes(x=consensus,y=MAT, group=consensus)) +
+  geom_boxplot(notch=T, aes(fill=consensus)) +
+  scale_fill_manual(values=myCols) +
+  theme_bw(base_size=20) +
+  theme(legend.position="none") +
+  coord_flip() +
+  xlab("Change in Performance") +
+  ylab("Mean Annual Temperature")
+
+################################################################################
+# Plot scatterplot of consensus categories along MAT gradient
+# Add in smoothed histogram
+################################################################################
+
+pts <- ggplot(data=d2, aes(x=MAT, y=(conf2))) +
+  geom_point(aes(fill=conf2), color="black", pch=21) +
+  #geom_smooth(span=.9) +
+  scale_fill_gradient2(low="red", high="blue",
+                       name="Model\nAgreement\n",
+                       breaks=c(-20,0,20),labels=c(-20,0,20),
+                       limits=c(-20,20)) +
+  geom_hline(yintercept=0) +
+  xlab("Mean Annual Temperature") +
+  ylab("Vulnerability Index") +
+  geom_vline(xintercept=min(d2[d2$consensus=="Decrease",]$MAT), linetype="dashed") +
+  geom_vline(xintercept=max(d2[d2$consensus=="Increase",]$MAT), linetype="dashed") +
+  theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
+    legend.justification=c(1,1), legend.position=c(.99,.99),
+    #legend.position="top",
+    panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
+  xlim(c(-5.9,22.9)) +
+  guides(fill = guide_colorbar(barheight = unit(1, "cm")))
+pts
+# Work on smoothed histogram----------------------------------------------------
+# File folder for climatology rasters
+ndir <- "~/Box Sync/sageseer/ClimateData/PRISM_tmean_30yr_normal_800mM2_annual_asc/"
+
+library(raster)
+# Read in PRISM climatology rasters
+MAT <- raster(paste(ndir, "MAT_crop.tif", sep=""))
+
+# Pull in cover map from the climate console
+cmap <- raster("/Users/poulterlab1/Documents/GIS_baselayers/Sagebrush_MW5k_1km_latlon.tif")
+points <- rasterToPoints(cmap)
+
+# Convert to data frame and filter out zeros
+pts2 <- data.frame(points)
+pts3 <- pts2[pts2$Sagebrush_MW5k_1km_latlon>0,]
+dim(pts2)
+dim(pts3)
+
+# Extract MAT data
+pts4 <- extract(MAT,pts3[,1:2])
+cover <- as.data.frame(pts4)
+
+# Plot a smoothed histogram of cover data
+# Split to color by confidence
+myCols = c("red","lightgray","blue")
+
+max<- max(d2[d2$consensus=="Increase",]$MAT)
+min <- min(d2[d2$consensus=="Decrease",]$MAT)
+c2 <- cover %>% 
+  mutate(cat=ifelse(pts4>max, "Decrease","Either")) %>%
+  mutate(cat=ifelse(pts4<min, "Increase",cat))
+           
+                      
+hist <-
+ggplot(data=c2, aes(x=pts4, fill=cat)) +
+  #geom_density(adjust=2,alpha = 0.1,color="grey") +
+  #geom_histogram(binwidth=.5) +
+  geom_bar(aes(y = (..count..)/sum(..count..)), binwidth = .5) + 
+  scale_fill_manual(values=myCols) +
+  geom_vline(xintercept=min, linetype="dashed") +
+  geom_vline(xintercept=max, linetype="dashed") +
+  xlab(expression("Mean Annual Temperature ("*~degree*"C)")) +
+  ylab("Proportion of Range") +
+  xlim(c(-5.9,22.9)) +
+  theme(legend.position="none",
+    panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+hist
+
+# Save Plots
+# first, fix annoying issue with axes not lining up
+gp1<- ggplot_gtable(ggplot_build(pts))
+gp2<- ggplot_gtable(ggplot_build(hist))
+#gprects<- ggplot_gtable(ggplot_build(prects))
+maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3])
+gp1$widths[2:3] <- maxWidth
+gp2$widths[2:3] <- maxWidth
+grid.arrange(arrangeGrob(gp1,gp2, ncol=1))
+
+# Save scatterplot and boxplot to tiff
+tiff(paste(fpath, "Figx_vulnerability_rangehist.tiff", sep=""),
+     width = 80, height = 152, units = 'mm', res = 450)
+grid.arrange(arrangeGrob(gp1,gp2, ncol=1, heights=c(72,80)))
 dev.off()
 
 ################################################################################
