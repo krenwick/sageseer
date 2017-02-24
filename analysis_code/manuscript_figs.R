@@ -42,6 +42,13 @@ dat2 <- dat[!(dat$y2 %in% carlat==TRUE & dat$x2 %in% carlon==TRUE),]
 dat2$Comp.1 <- dat2$Comp.1*-1
 out<- dat2
 
+# eliminate dakota pts
+max(out$x)
+min(out$x)
+outb <- filter(out, x<=-103.7)
+nrow(outb)
+out <- outb
+
 # get shapefile for US map
 states <- readOGR(paste(dpath, "data/GIS_baselayers", sep=""), "states")
 wus <- states[states$STATE_ABBR=="WA"|states$STATE_ABBR=="OR"|states$STATE_ABBR=="CA"
@@ -92,7 +99,6 @@ yr <- range(dat[, sc ] )
 nb <- 30  # number of grid divisions on each axis for site selection 
 grid <- list(seq(xr[1], xr[2], length.out = nb), seq(yr[1], yr[2], length.out = nb) )
 
-labs <- c("(a)","(b)")
 p2 <- ggplot(data=out, aes(x=Comp.1, y=Comp.2)) +
   geom_point(color="gray87", size=.5) +
   geom_point(data=out[out$LT_data == 1, sc], color="black", size=.5) +
@@ -103,11 +109,16 @@ p2 <- ggplot(data=out, aes(x=Comp.1, y=Comp.2)) +
   scale_y_continuous(limits=c(-6.45,14.95)) +
   xlab("PC1: Temperature") +
   ylab("PC2: Precipitation Seasonality") +
+  annotate("text", x=-Inf, y = Inf, label = "(a)", vjust=1.3, hjust=2, size=3,fontface=2) +
   theme(panel.background=element_blank(),panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),plot.background=element_blank()) #+
-  #annotate("rect", xmin = -12.1, xmax = -11, ymin = 14, ymax = 14.95, fill = "white") +
-  #annotate("text", label = "(a)", x = -12.1, y = 14.95, fontface = 2) 
-  #annotate("text", label = "(a)", x = -11.5, y = 14.6, fontface = 2) 
+        panel.grid.minor=element_blank(),plot.background=element_blank(),
+        panel.border=element_rect(size=0.2, linetype="solid")) 
+
+# Code to override clipping
+gt <- ggplot_gtable(ggplot_build(p2))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+p2 <-gt
+plot(p2)
 
 ###############################
 # 2. Create map working with same data as PCA
@@ -129,10 +140,18 @@ p1 <- ggplot(data=out2, aes(y=y, x=x, color=type)) +
     name="", breaks=c("presence", "LT","extra"),
     labels=c("Presence","Long-term data", "Extra site")) +
   theme(panel.grid.major=element_blank(),legend.position="none",
-        panel.grid.minor=element_blank(),plot.background=element_blank()) +
+        panel.grid.minor=element_blank(),plot.background=element_blank(),
+        panel.border=element_rect(size=0.2, linetype="solid")) +
+  annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=2, size=3,fontface=2) +
   xlab("Longitude") +
-  ylab("Latitude") #+
-  #annotate("text", label = "(b)", x = -125, y = 49, fontface = 2) +
+  ylab("Latitude") 
+p1
+
+# Code to override clipping
+gt2 <- ggplot_gtable(ggplot_build(p1))
+gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
+p1 <-gt2
+
 
 # get legend
 leg <- ggplot(data=out2, aes(y=y, x=x, color=type)) +
@@ -151,10 +170,15 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save map and PCA to png
-tiff(paste(fpath, "Fig1_PCA_map.tiff", sep=""),
-    width = 80, height = 170, units = 'mm', res = 450)
-grid.arrange(legend,p2,p1, ncol=1, heights=c(10,80,80))
-dev.off()
+# tiff(paste(fpath, "Fig1_PCA_map.tiff", sep=""),
+#     width = col1, height = 170, units = 'mm', res = 450)
+# grid.arrange(legend,p2,p1, ncol=1, heights=c(10,80,80))
+# dev.off()
+
+#try eps
+both <- grid.arrange(legend,p2,p1, ncol=1, heights=c(10,80,80))
+ggsave(paste(fpath, "Fig1_PCA_map.eps", sep=""), plot=both, width = col1, height = 170, 
+       units = 'mm')
 
 ################################################################################
 # Figure xx:
