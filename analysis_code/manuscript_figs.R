@@ -177,7 +177,7 @@ legend <- get_legend(leg2)
 
 #try eps
 both <- grid.arrange(legend,p2,p1, ncol=1, heights=c(10,80,80))
-ggsave(paste(fpath, "Fig1_PCA_map.eps", sep=""), plot=both, width = col1, height = 170, 
+ggsave(paste(fpath, "PCA_map.eps", sep=""), plot=both, width = col1, height = 170, 
        units = 'mm')
 
 ################################################################################
@@ -229,12 +229,10 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save Plot
-tiff(paste(fpath, "Fig4_change_GCM_rcp85_color_line.tiff", sep=""),
-    width = 169, height = 169, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
-             heights = unit(c(9,160), "mm"))
-
-dev.off()
+both2 <- grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
+                      heights = unit(c(9,160), "mm"))
+ggsave(paste(fpath, "change_GCM_MAT_rcp85_color_line.eps", sep=""), plot=both2,
+       width = col2, height = col2, units = 'mm')
 
 # Black and White for print:-----------------------------------
 # Focus on the model near the center (CESM1-CAM5):
@@ -454,6 +452,9 @@ grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
 dev.off()
 
 # Make plots in black and white-------------------------------------------------
+vj <- 1.5 # vertical adjustment for panel label, pos moves down
+hj <- -.1 # horizotal placement of panel label, neg moves right
+
 AK <- 
   ggplot(data=m5[m5$model=="AK",], aes(x=scenario, y=meanchange, fill=GCM)) +
   geom_bar(stat="identity", position=position_dodge(width=0.9), color="black") +
@@ -464,7 +465,8 @@ AK <-
   ylab(expression(paste(Delta," % Cover"))) +
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none") +
+  annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
 
 CC <- 
   ggplot(data=m5[m5$model=="randfor",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -475,10 +477,10 @@ CC <-
   xlab("GCM") +
   ylab(expression(paste(Delta," Max % Cover"))) +
   scale_y_continuous(limits=c(-11,14)) +
-  #annotate("text", x=.5, y = Inf, label = "(a)", vjust=1.3, hjust=1.3, size=4) +
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none")+
+  annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -490,7 +492,8 @@ KR <-
   ylab(expression(paste(Delta," % Cover"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none")+
+  annotate("text", x=-Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=3)
 
 DRS <- 
   ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -502,7 +505,8 @@ DRS <-
   ylab(expression(paste(Delta," % Regen"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none")
+        legend.position="none") +
+  annotate("text", x=-Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=3)
 
 # make legend
 leg <- ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -536,12 +540,19 @@ gp3$widths[2:3] <- maxWidth
 gp4$widths[2:3] <- maxWidth
 grid.arrange(arrangeGrob(gp1,gp2,gp3,gp4, ncol=2))
 
-tiff(paste(fpath, "Fig3_GCM_magchange_bw.tiff", sep=""),
-     width = 169, height = 169, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
-                                 heights = unit(c(77,80), "mm")), ncol=1,
-             heights = unit(c(9,160), "mm"))
-dev.off()
+# tiff(paste(fpath, "Fig3_GCM_magchange_bw.tiff", sep=""),
+#      width = 169, height = 169, units = 'mm', res = 300)
+# grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
+#                                  heights = unit(c(77,80), "mm")), ncol=1,
+#              heights = unit(c(9,160), "mm"))
+# dev.off()
+
+#try eps
+GCM_bar_bw <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
+                          heights = unit(c(77,80), "mm")), ncol=1,
+                           heights = unit(c(9,160), "mm"))
+ggsave(paste(fpath, "GCM_magchange_bw.eps", sep=""), plot=GCM_bar_bw,
+       width = col2, height = col2, units = 'mm')
 
 ################################################################################
 # Figure xx:
