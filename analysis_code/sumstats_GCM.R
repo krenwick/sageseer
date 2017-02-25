@@ -32,6 +32,7 @@ m4 <- merged %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") 
 
 ################################################################################
+# DIRECTION OF CHANGE
 # Calculate % of sites with pos vs. neg response for each model
 m5 <- m4 %>% group_by(model) %>%
   summarise(n.inc=sum(cat=="increase"), n.dec=sum(cat=="decrease"), 
@@ -44,10 +45,7 @@ m6 <- m4 %>% group_by(model, scenario) %>%
             perc=round(n.dec/(n.inc+n.dec),3))
 m6
 
-
-################################################################################
-# Look at the magnitude of change
-# 1st: what is the range of pos + negative changes for each model?
+# what is the temp range of pos + negative changes for each model?
 m7 <- m4 %>% group_by(model, cat) %>%
   summarise(m.change=round(mean(change),2), min=round(min(change),2),
             max=round(max(change),2), sd=round(sd(change),2))
@@ -72,7 +70,65 @@ round(table(d2$conf2)/7140,2)
 # perfectly agree 44% of time
 # consensus 83% of time
 
-################
+########### Look at similarity in direction using Cohen's Kappa
+kap1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
+  spread(model,cat)
+kap2 <- as.matrix(kap1[,4:7])
+
+library(irr)
+
+# Can't find an organizd way to loop through models- calc. pairwise
+head(kap2)
+AK.KR <- kappa2(kap2[,1:2])
+AK.DS <- kappa2(kap2[,c(1,3)])
+AK.CC <- kappa2(kap2[,c(1,4)])
+KR.DS <- kappa2(kap2[,2:3])
+KR.CC <- kappa2(kap2[,c(2,4)])
+DS.CC <- kappa2(kap2[,3:4])
+
+ps <- c(AK.KR$p.value,AK.DS$p.value,AK.CC$p.value,KR.DS$p.value,KR.CC$p.value,
+        DS.CC$p.value)
+# Correct p-values for familywise error rate
+# can choose several methods, holm perhaps better than bonferonni
+newp <- p.adjust(ps, method="holm")
+round(newp,2) # significance isn't terribly useful here
+
+# look at actual kappa values. Higher -> more agreement
+kaps <- c(AK.KR$value,AK.DS$value,AK.CC$value,KR.DS$value,KR.CC$value,
+          DS.CC$value)
+kaps #
+############################
+# re-do kaps for GCMs
+kapGCM1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
+  spread(GCM,cat)
+kap2 <- as.matrix(kapGCM1[,4:8])
+
+p1 <- kappa2(kap2[,1:2])
+p2 <- kappa2(kap2[,c(1,3)])
+p3 <- kappa2(kap2[,c(1,4)])
+p4 <- kappa2(kap2[,c(1,5)])
+p5 <- kappa2(kap2[,c(2,3)])
+p6 <- kappa2(kap2[,c(2,4)])
+p7 <- kappa2(kap2[,c(2,5)])
+p8 <- kappa2(kap2[,c(3,4)])
+p9 <- kappa2(kap2[,c(3,5)])
+p10 <- kappa2(kap2[,c(4,5)])
+
+kapsGCM <- c(p1$value,p2$value,p3$value,p4$value,p5$value,p6$value,p7$value,
+             p8$value,p8$value,p10$value)
+range(kapsGCM)
+mean(kapsGCM)
+
+############
+# kappa for emissions scenario
+kapRCP1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
+  spread(scenario,cat)
+kap2 <- as.matrix(kapRCP1[,4:5])
+kappa2(kap2)
+
+################################################################################
+# MAGNITUDE OF CHANGE
+################################################################################
 # Look at correlations in predicted change between models
 # Use spearmans rank correlation, since can't assume parametric
 # for each model, take mean response across RCP x GCM combos
@@ -82,10 +138,14 @@ m8 <- m4 %>% group_by(site, model) %>%
   spread(model,change)
 m9 <- as.matrix(m8[,2:5])  
 
-rcorr(m9, type="spearman")
+cors <- rcorr(m9, type="spearman")
+p.corrs <- as.numeric(cors$P)
+round(p.adjust(p.corrs, method="holm"),2) # lose .0561, rest still <.05.
 
-##############################################
+
+################################################################################
 # Aggregate response: vulnerability scale
+################################################################################
 d2 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
@@ -123,6 +183,22 @@ d3 %>% group_by(scenario) %>%
   summarise(perc.inc=round(sum(conf2>0)/714,2), per.dec=round(sum(conf2<0)/714,2), 
             uns=round(sum(conf2==0)/714,2))
 
+# % increase by GCM, both emissions scenarios
+# split by GCM
+GCM1 <- m4 %>%
+  dplyr::select(site, model,scenario:GCM,change:cat) %>%
+  group_by(site, GCM) %>%
+  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  mutate(vuln=n.decrease/n) %>%
+  mutate(conf2=n.increase-n.decrease) %>%
+  mutate(conf3=conf2/n)
+
+GCM1 %>%
+  group_by(GCM) %>%
+  summarise(perc.inc=round(sum(conf2>0)/714,2), per.dec=round(sum(conf2<0)/714,2), 
+            uns=round(sum(conf2==0)/714,2))
+
+###############
 # mean absolute value of agreement for each rcp
 d3 %>% group_by(scenario) %>%
   summarise(agree=mean(abs(conf2)))
@@ -157,3 +233,5 @@ d5 %>% group_by(scenario,cat2) %>%
   summarise(min=min(MAT/10), max=max(MAT/10))
 #neg.h: 9.1-17.7, 9.1-17
 #pos.h:-1.9 - 9.5, -1.9 - 12.3
+
+
