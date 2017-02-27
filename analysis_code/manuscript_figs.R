@@ -65,8 +65,6 @@ unit <- read.csv(paste(dpath, "data/focal_sites_by_zone.csv", sep="")) %>%
 # Calculate change and direction:
 m4 <- merged %>% 
   mutate(cat=ifelse(change>0, "increase", "decrease")) %>%
-  # uncomment next line to add "nochange" back in
-  #mutate(cat=ifelse(change==0, "nochange", cat)) %>%
   dplyr::select(site:GCM,change,cat)
 
 d2 <- m4 %>%
@@ -115,6 +113,7 @@ p2 <- ggplot(data=out, aes(x=Comp.1, y=Comp.2)) +
         panel.border=element_rect(size=0.2, linetype="solid")) 
 
 # Code to override clipping
+# necessary to add panel label outside of plot area
 gt <- ggplot_gtable(ggplot_build(p2))
 gt$layout$clip[gt$layout$name == "panel"] <- "off"
 p2 <-gt
@@ -169,13 +168,7 @@ get_legend<-function(myggplot){
 }
 legend <- get_legend(leg2)
 
-# Save map and PCA to png
-# tiff(paste(fpath, "Fig1_PCA_map.tiff", sep=""),
-#     width = col1, height = 170, units = 'mm', res = 450)
-# grid.arrange(legend,p2,p1, ncol=1, heights=c(10,80,80))
-# dev.off()
-
-#try eps
+# Save map and PCA as one figure
 both <- grid.arrange(legend,p2,p1, ncol=1, heights=c(10,80,80))
 ggsave(paste(fpath, "PCA_map.eps", sep=""), plot=both, width = col1, height = 170, 
        units = 'mm')
@@ -275,12 +268,10 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save Plot
-tiff(paste(fpath, "Fig4_change_scenario_CESM_bw.tiff", sep=""),
-     width = 169, height = 169, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
-             heights = unit(c(9,160), "mm"))
-
-dev.off()
+bwtemp <- grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
+                      heights = unit(c(9,160), "mm"))
+ggsave(paste(fpath, "MAT_axis_CESM_bw.eps", sep=""), plot=bwtemp, width = col2, height = 169, 
+       units = 'mm')
 
 ################################################################################
 # Figure xx (supplemental 3?)
@@ -331,12 +322,10 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save Plot
-tiff(paste(fpath, "SS3_change_GCM_rcp85_pptgradient.tiff", sep=""),
-     width = 169, height = 169, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
-             heights = unit(c(9,160), "mm"))
-dev.off()
-
+changepre <- grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
+                          heights = unit(c(9,160), "mm"))
+ggsave(paste(fpath, "change_GCM_rcp85_pptgradient.eps", sep=""), plot=changepre, 
+       width = col2, height = 169, units = 'mm')
 ################################################################################
 # Figure xx:
 # Bar chart showing variation between GCMs and models
@@ -357,6 +346,8 @@ yelred <- c("#ffffb2","#fecc5c","#fd8d3c","#f03b20","#bd0026")
 bw <- c('#f7f7f7','#cccccc','#969696','#636363','#252525')
 
 # Make plots in color-----------------------------------------------------
+vj <- 1.5 # vertical adjustment for panel label, pos moves down
+hj <- -.1 # horizotal placement of panel label, neg moves right
 AK <- 
   ggplot(data=m5[m5$model=="AK",], aes(x=scenario, y=meanchange, fill=GCM)) +
   geom_bar(stat="identity", position=position_dodge(width=0.9), color="black") +
@@ -368,7 +359,7 @@ AK <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "TC", vjust=1.3, hjust=-.2, size=8)
+  annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
 AK
 
 CC <- 
@@ -384,7 +375,7 @@ CC <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "SC", vjust=1.3, hjust=-.2, size=8)
+  annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -397,7 +388,7 @@ KR <-
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "DGVM", vjust=1.3, hjust=-.2, size=8)
+  annotate("text", x=-Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=3)
 
 DRS <- 
   ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -410,7 +401,7 @@ DRS <-
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "SS", vjust=1.3, hjust=-.2, size=8)
+  annotate("text", x=-Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=3)
 
 # make legend
 leg <- ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -444,12 +435,12 @@ gp3$widths[2:3] <- maxWidth
 gp4$widths[2:3] <- maxWidth
 grid.arrange(arrangeGrob(gp1,gp2,gp3,gp4, ncol=2))
 
-tiff(paste(fpath, "Fig3_GCM_magchange_color.tiff", sep=""),
-     width = 169, height = 169, units = 'mm', res = 300)
-grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
+colorbar <-grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
             heights = unit(c(77,80), "mm")), ncol=1,
              heights = unit(c(9,160), "mm"))
-dev.off()
+ggsave(paste(fpath, "GCM_magchange_color.eps", sep=""), plot=colorbar, 
+       width = col2, height = col2, units = 'mm')
+
 
 # Make plots in black and white-------------------------------------------------
 vj <- 1.5 # vertical adjustment for panel label, pos moves down
@@ -540,14 +531,7 @@ gp3$widths[2:3] <- maxWidth
 gp4$widths[2:3] <- maxWidth
 grid.arrange(arrangeGrob(gp1,gp2,gp3,gp4, ncol=2))
 
-# tiff(paste(fpath, "Fig3_GCM_magchange_bw.tiff", sep=""),
-#      width = 169, height = 169, units = 'mm', res = 300)
-# grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
-#                                  heights = unit(c(77,80), "mm")), ncol=1,
-#              heights = unit(c(9,160), "mm"))
-# dev.off()
-
-#try eps
+# Savve Plot
 GCM_bar_bw <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
                           heights = unit(c(77,80), "mm")), ncol=1,
                            heights = unit(c(9,160), "mm"))
@@ -572,31 +556,19 @@ d2 <- merged %>%
 dim(d2)
 d2$consensus <- factor(d2$consensus, levels=c("Decrease","Unsure","Increase"))
 
-tiff(paste(fpath, "Fig5_consensus_MAT_boxplot_bw.tiff", sep=""),
-     width = 80, height = 80, units = 'mm', res = 300)
-ggplot(data=d2, aes(x=consensus,y=MAT, group=consensus)) +
+boxplot <- ggplot(data=d2, aes(x=consensus,y=MAT, group=consensus)) +
   geom_boxplot(notch=T) +
   coord_flip() +
   xlab("Change in Performance") +
-  ylab("Mean Annual Temperature")
-dev.off()
+  ylab(expression("Mean Annual Temperature ("*~degree*"C)")) +
+ggsave(paste(fpath, "consensus_MAT_boxplot_bw.eps", sep=""), plot=boxplot,
+       width = col1, height = col1*.7, units = 'mm')
 
-# Make color for poster, and flip like the old one
-myCols = c("red3","dodgerblue3")
-ggplot(data=d2[d2$consensus!="Unsure",], aes(x=consensus,y=MAT, group=consensus)) +
-  geom_boxplot(notch=T, aes(fill=consensus)) +
-  scale_fill_manual(values=myCols) +
-  theme_bw(base_size=20) +
-  theme(legend.position="none") +
-  coord_flip() +
-  xlab("Change in Performance") +
-  ylab("Mean Annual Temperature")
 
 ################################################################################
 # Plot scatterplot of consensus categories along MAT gradient
 # Add in smoothed histogram
 ################################################################################
-
 pts <- ggplot(data=d2, aes(x=MAT, y=(conf2))) +
   geom_point(aes(fill=conf2), color="black", pch=21) +
   #geom_smooth(span=.9) +
@@ -614,7 +586,7 @@ pts <- ggplot(data=d2, aes(x=MAT, y=(conf2))) +
     #legend.position="top",
     panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
   xlim(c(-5.9,22.9)) +
-  guides(fill = guide_colorbar(barheight = unit(1, "cm")))
+  guides(fill = guide_colorbar(barheight = unit(1.5, "cm")))
 pts
 # Work on smoothed histogram----------------------------------------------------
 # File folder for climatology rasters
@@ -674,15 +646,18 @@ gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
 grid.arrange(arrangeGrob(gp1,gp2, ncol=1))
 
-# Save scatterplot and boxplot to tiff
-tiff(paste(fpath, "Figx_vulnerability_rangehist.tiff", sep=""),
-     width = 80, height = 152, units = 'mm', res = 450)
-grid.arrange(arrangeGrob(gp1,gp2, ncol=1, heights=c(72,80)))
-dev.off()
+# Save scatterplot and boxplot
+distrib <- grid.arrange(arrangeGrob(gp1,gp2, ncol=1, heights=c(72,80)))
+ggsave(paste(fpath, "vulnerability_rangehist.eps", sep=""), plot=distrib,
+       width = col1, height = 152, units = 'mm')
+
 
 ################################################################################
 # Plot the change/confidence on Andy's PCA axes (RCP8.5)
 ################################################################################
+vj <- 1.3 # vertical adjustment for panel label, pos moves down
+hj <- 2.1 # horizotal placement of panel label, neg moves right, pos left
+
 # merge PCA back into manipulated data
 m2 <- merged %>% group_by(site) %>% summarise_each(funs(mean)) %>% 
   dplyr::select(site,Comp.1,Comp.2) %>%
@@ -701,13 +676,19 @@ gg3 <-
   theme(
     #legend.position="top",
     legend.justification=c(1,1), legend.position=c(.99,.99),
-    panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+    panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
+  guides(fill = guide_colorbar(barheight = unit(1.5, "cm"))) +
+  annotate("text", x=-Inf, y = Inf, label = "(a)", vjust=vj, hjust=hj, size=3,fontface=2) 
 
-# Save Plot
-tiff(paste(fpath, "Fig6_PCA_model_agreement_color.tiff", sep=""),
-    width = 80, height = 100, units = 'mm', res = 300)
-gg3
-dev.off()
+# Code to override clipping
+gt2 <- ggplot_gtable(ggplot_build(gg3))
+gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
+gg3 <-gt2
+
+# # Save Plot
+# gg3
+# ggsave(paste(fpath, "PCA_model_agreement_color.eps", sep=""), plot=gg3,
+#        width = col1, height = col1, units = 'mm')
 
 ################################################################################
 # Make map showing change/confidence (RCP8.5)
@@ -720,12 +701,10 @@ md2 <- mapdat %>% group_by(site) %>%
   summarise(conf2=mean(conf2), lat=mean(latitude.x), lon=mean(longitude.x))
 table(md2$conf2)
 
-png(paste(fpath, "map_agreement_rcp8.5.png", sep=""),
-    width = col1, height = col1, units = 'mm', res = 450)
-ggplot(data=md2, aes(y=lat, x=lon,fill=conf2)) +
-  geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="black") +
+agree <- 
+  ggplot(data=md2, aes(y=lat, x=lon,fill=conf2)) +
+  geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="black", size=.1) +
   geom_point( size = 1,colour="black",pch=21) + 
-  #scale_fill_gradient2(name="Model\nAgreement\n") +
   scale_fill_gradient2(low="red", high="blue",
                        name="Model\nAgreement\n",
                        breaks=c(-20,0,20),labels=c(-20,0,20),
@@ -733,13 +712,24 @@ ggplot(data=md2, aes(y=lat, x=lon,fill=conf2)) +
   ylab("Longitude") +
   xlab("Latitude") +
   coord_fixed(1.3) +
-  #theme(legend.justification=c(0,0), legend.position=c(0,0)) +
-  theme(legend.position="left") +
-  theme(legend.margin=unit(0, "cm"),
+  theme(legend.position="none") +
+  theme(#legend.margin=unit(0, "cm"),
         axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_blank(), panel.background=element_blank(),
         panel.border=element_blank(),panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),plot.background=element_blank())
-dev.off()
+        panel.grid.minor=element_blank(),plot.background=element_blank()) +
+  annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=-.2, size=3,fontface=2) 
+
+# Code to override clipping
+gt2 <- ggplot_gtable(ggplot_build(agree))
+gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
+agree <-gt2
+
+# Save PCA and map as multi-panel fig.
+pcamap <- grid.arrange(gg3, agree, ncol=1, heights=c(col1,col1))
+ggsave(paste(fpath, "pca_map_results.eps", sep=""), plot=pcamap,
+       width = col1, height = 169, units = 'mm')
+
+
