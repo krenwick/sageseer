@@ -70,6 +70,52 @@ round(table(d2$conf2)/7140,2)
 # perfectly agree 44% of time
 # consensus 83% of time
 
+##################################################
+# How often does choice of GCM cause a change in the direction of response?
+# OR: how often are GCMs in perfect agreement?
+m5 <- m4 %>% 
+  group_by(site,model,scenario) %>%
+  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  group_by(model,scenario) %>%
+  summarise(nochange=sum(n.increase==5|n.decrease==5), n=n()) %>%
+  mutate(perc=(n-nochange)/n)
+(m5) # WOW! For SS and rcp45, it flips 73% of time! WHY?
+mean(m5$perc) # 20% flip, 80% consistent
+# 80% = where ALL 5 agree. Higher if look at 4/5.
+
+# Look at 5 vs. 4/5 GCMs
+d2 <- m4 %>%
+  dplyr::select(site, model,scenario:GCM,change:cat) %>%
+  group_by(site,model,scenario) %>%
+  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  mutate(conf2=n.increase-n.decrease) 
+dim(d2)
+head(d2)
+round(table(d2$conf2)/5712,3) # at least 4/5 agree 92% of the time
+
+# How often does RCP cause a flip?
+m5 <- m4 %>% 
+  group_by(site,model,GCM) %>%
+  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  group_by(model,GCM) %>%
+  summarise(nochange=sum(n.increase==2|n.decrease==2), n=n()) %>%
+  mutate(perc=(n-nochange)/n)
+m5 # Again- what's up with GISSM?!
+mean(m5$perc) # 8%
+
+# How often does the ecological model cause a flip?
+m5 <- m4 %>% 
+  group_by(site,scenario,GCM) %>%
+  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  group_by(scenario,GCM) %>%
+  summarise(nochange=sum(n.increase==2|n.decrease==2), n=n()) %>%
+  mutate(perc=(n-nochange)/n)
+m5 # All the time... rare for all 4 to agree
+mean(m5$perc) # 83%
+
+# For paper, more clear to say how often is the direction of change consistent?
+
+
 ########### Look at similarity in direction using Cohen's Kappa
 kap1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
   spread(model,cat)
@@ -97,6 +143,7 @@ round(newp,2) # significance isn't terribly useful here
 kaps <- c(AK.KR$value,AK.DS$value,AK.CC$value,KR.DS$value,KR.CC$value,
           DS.CC$value)
 kaps #
+mean(kaps) #.117
 ############################
 # re-do kaps for GCMs
 kapGCM1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
@@ -132,15 +179,36 @@ kappa2(kap2)
 # Look at correlations in predicted change between models
 # Use spearmans rank correlation, since can't assume parametric
 # for each model, take mean response across RCP x GCM combos
+# changed mind- don't take the mean...
 m8 <- m4 %>% group_by(site, model) %>%
-  dplyr::select(site,model,change) %>%
-    summarise_each(funs(mean)) %>%
+  dplyr::select(site,model,GCM,scenario,change) %>%
+    #summarise_each(funs(mean)) %>%
   spread(model,change)
-m9 <- as.matrix(m8[,2:5])  
+m9 <- as.matrix(m8[,4:7])  
 
-cors <- rcorr(m9, type="spearman")
+cors <- rcorr(m9, type="spearman") # moderately laughable
 p.corrs <- as.numeric(cors$P)
-round(p.adjust(p.corrs, method="holm"),2) # lose .0561, rest still <.05.
+round(p.adjust(p.corrs, method="holm"),2) # all except GCM:randfor significant
+
+# look at correlation mong GCMs
+m10 <- m4 %>% group_by(site, GCM) %>%
+  dplyr::select(site,model,GCM,scenario,change) %>%
+  spread(GCM,change)
+m11 <- as.matrix(m10[,4:8])  
+cors <- rcorr(m11, type="spearman") # GCM pairs tend to agree- more than models!
+p.corrs <- as.numeric(cors$P)
+round(p.adjust(p.corrs, method="holm"),2) # all significant
+
+# look at correlation among rcps
+m12 <- m4 %>% group_by(site, scenario) %>%
+  dplyr::select(site,model,GCM,scenario,change) %>%
+  spread(scenario,change)
+m13 <- as.matrix(m10[,4:5])  
+cors <- rcorr(m13, type="spearman") # .67, significant
+p.corrs <- as.numeric(cors$P)
+round(p.adjust(p.corrs, method="holm"),2) # all significant
+
+# calculate mean up and down for each. How does it change when switch?
 
 
 ################################################################################
