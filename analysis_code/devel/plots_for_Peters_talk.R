@@ -12,7 +12,8 @@ setwd("/Users/poulterlab1/version-control/sageseer/")
 
 # folder path:
 dpath <- "data/"
-opath <- "figures/"
+fpath <- "figures/"
+dpath2 <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
 
 # Color Palette for GCMs (color-blind friendly)
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
@@ -53,13 +54,13 @@ latlon <- merged %>% group_by(site) %>% summarise(Lon=mean(longitude.x), Lat=mea
 d3 <- merge(d2, latlon, by="site", all=F) %>%
   dplyr::select(site, Lon, Lat, consensus, conf_cat) %>%
   rename(confidence=conf_cat)
-write.csv(d3, paste(dpath, "LonLat_confidence_cats.csv", sep=""), row.names=F)
+#write.csv(d3, paste(dpath, "LonLat_confidence_cats.csv", sep=""), row.names=F)
 ################################################################################
 # Plot the absolute change, in original scale, MAT gradient, 4-plot grid
 ################################################################################
 plot_raw_change <- function(data,  modeln, ylab,title) {
   d <- data %>% dplyr::filter(model==modeln)
-  plot <- ggplot(data=d, aes(x=MAT,y=change)) +
+  plot <- ggplot(data=d, aes(x=bio1/10,y=change)) +
     geom_point(aes(color=GCM), size=1) +
     scale_color_manual(values=cbPalette, name="GCM") +
     geom_hline(yintercept=0, linetype="dashed") +
@@ -73,15 +74,15 @@ plot_raw_change <- function(data,  modeln, ylab,title) {
           plot.margin=unit(c(.1,.1,.1,.1), "cm"),
           axis.title.y = element_text(size = rel(1.3))) +
     xlab("MAT") +
-    scale_x_continuous(limits=c(-1.9,20.8)) +
+    scale_x_continuous(limits=c(-1.9,22.9)) +
     ylab(ylab) +
     annotate("text", x=Inf, y = Inf, label = title, vjust=1.3, hjust=1.3, size=8)
   return(plot)
 }
-DGVM <- plot_raw_change(merged2,modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DVM")
-CC <- plot_raw_change(merged2,modeln="RandFor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
-AK <- plot_raw_change(merged2,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
-DRS <- plot_raw_change(merged2,modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="SS")
+DGVM <- plot_raw_change(merged,modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DVM")
+CC <- plot_raw_change(merged,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
+AK <- plot_raw_change(merged,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
+DRS <- plot_raw_change(merged,modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="SS")
 
 # try scaling Andy's change by the baseline (so % change)
 AKdat <- merged %>% mutate(change=change/baseline)
@@ -248,7 +249,7 @@ dev.off()
 ################################################################################
 # Plot R & R figure
 ################################################################################
-dat_nrcs_RR <- read.csv(file.path(dpath, "focal_pts_project_extract_all_SMTRegime.csv"), header = TRUE)
+dat_nrcs_RR <- read.csv(file.path(dpath2, "focal_pts_project_extract_all_SMTRegime.csv"), header = TRUE)
 rr <- merge(d2, dat_nrcs_RR, by="site", all=F)
 
 dir_prj <- "~/Box Sync/sageseer"
@@ -279,8 +280,7 @@ dat2_agree <- mdat %>%
   mutate(rel_conf_cat=conf_cat/n) %>%
   mutate(consensus=ifelse(conf_cat==n.increase,"increase","decrease")) %>%
   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
-  filter(n==max(n)) %>%
-  filter(site %in% bad==FALSE)
+  filter(n==max(n)) 
 
 table(dat2_agree$consensus)
 
@@ -358,13 +358,17 @@ round(with(dat_agree_NRCS, table(Maestas_RR = RR_class_name, consensus) / sw_RR_
 # But what is the sample size?
 sw_RR_freq
 
+High         0.01     0.98   0.02
+Low          0.17     0.70   0.12
+Moderate     0.02     0.97   0.02
+
 #####################################################
 
 myCols = c("red3","lightgray","dodgerblue3")
 
-High   <- c(      0.00,  0,   1.00)
-Low   <-  c(    0.24,  0.12,   0.64)
-Moderate  <- c(    0.01,  0.02,   0.97)
+High   <- c(      0.01,  0,   .98)
+Low   <-  c(    0.17,  0.12,   0.7)
+Moderate  <- c(    0.02,  0.02,   0.97)
 
 Nhigh <-6; Nlow <- 250; Nmod <- 420
 
