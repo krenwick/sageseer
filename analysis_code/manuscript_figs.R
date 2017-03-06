@@ -349,38 +349,90 @@ ggsave(paste(fpath, "MAT_axis_CESM_bw.eps", sep=""), plot=bwtemp, width = col2, 
 # Color Version:---------------------------------------------
 rcp85 <- merged %>% filter(scenario=="rcp85") %>%
   mutate(extirpated=ifelse(baseline>0&predicted==0,1,0))
-plot_raw_change <- function(data,  modeln, ylab,title) {
-  d <- data %>% dplyr::filter(model==modeln)
-  plot <- ggplot(data=d, aes(x=bio12,y=change)) +
-    geom_point(aes(color=GCM), size=.5) +
-    scale_color_manual(values=cbPalette, name="GCM") +
-    geom_hline(yintercept=0, linetype="dashed") +
-    stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
-    #stat_smooth(aes(fill=GCM, color=GCM)) +
-    scale_fill_manual(values=cbPalette, name="GCM") +
-    ylab("Change in Response") +
-    theme(legend.position="none", legend.title=element_blank(),
-          panel.background=element_blank(),plot.background=element_blank(),
-          panel.grid.major=element_blank(), 
-          panel.grid.minor=element_blank(),
-          legend.text.align = 0,
-          plot.margin=unit(c(.1,.1,.1,.1), "cm"),
-          axis.title.y = element_text(size = rel(1.3))) +
-    xlab("Mean Annual Precipitation (mm)") +
-    #scale_x_continuous(limits=c(-1.9,20.8)) +
-    ylab(ylab) +
-    annotate("text", x=Inf, y = Inf, label = title, vjust=1.3, hjust=1.3, size=4)
-  return(plot)
-}
-DGVM <- plot_raw_change(rcp85,modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DVM")
-DGVM
-CC <- plot_raw_change(rcp85,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
-AK <- plot_raw_change(rcp85,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
-DRS <- plot_raw_change(rcp85,modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="SS")
-AK
+
+DGVM <- 
+  ggplot(data=rcp85[rcp85$model=="DGVM",], aes(x=bio12,y=change)) +
+  geom_point(aes(color=GCM), size=.5) +
+  scale_color_manual(values=cbPalette, name="GCM") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+  scale_fill_manual(values=cbPalette, name="GCM") +
+  theme(legend.position="none", legend.title=element_blank(),
+        panel.background=element_blank(),plot.background=element_blank(),
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(),
+        legend.text.align = 0,
+        plot.margin=unit(c(.1,.1,.1,.1), "cm"),
+        axis.title.y = element_text(size = rel(1.3))) +
+  xlab("Mean Annual Precipitation (mm)") +
+  ylab(expression(paste(Delta," % Cover"))) +
+  annotate("text", x=Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=4)
+
+CC <- 
+  ggplot(data=rcp85[rcp85$model=="randfor",], aes(x=bio12,y=change)) +
+  geom_point(aes(color=GCM), size=.5) +
+  scale_color_manual(values=cbPalette, name="GCM") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+  scale_fill_manual(values=cbPalette, name="GCM") +
+  theme(legend.position="none", legend.title=element_blank(),
+        panel.background=element_blank(),plot.background=element_blank(),
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(),
+        legend.text.align = 0,
+        plot.margin=unit(c(.1,.1,.1,.1), "cm"),
+        axis.title.y = element_text(size = rel(1.3)),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank()) +
+  xlab("MAT") +
+  ylab(expression(paste(Delta," Max % Cover"))) +
+  annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+
+AK <- 
+  ggplot(data=rcp85[rcp85$model=="AK",], aes(x=bio12,y=change)) +
+  geom_point(aes(color=GCM), size=.5) +
+  scale_color_manual(values=cbPalette, name="GCM") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+  scale_fill_manual(values=cbPalette, name="GCM") +
+  theme(legend.position="none", legend.title=element_blank(),
+        panel.background=element_blank(),plot.background=element_blank(),
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(),
+        legend.text.align = 0,
+        plot.margin=unit(c(.1,.1,.1,.1), "cm"),
+        axis.title.y = element_text(size = rel(1.3)),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank()) +
+  xlab("MAT") +
+  ylab(expression(paste(Delta," % Cover"))) +
+  annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+
+DRS <- 
+  ggplot(data=rcp85[rcp85$model=="GISSM_v1.6.3",], aes(x=bio12,y=change)) +
+  geom_point(aes(color=GCM), size=.5) +
+  scale_color_manual(values=cbPalette, name="GCM") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+  scale_fill_manual(values=cbPalette, name="GCM") +
+  theme(legend.position="none", legend.title=element_blank(),
+        panel.background=element_blank(),plot.background=element_blank(),
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(),
+        legend.text.align = 0,
+        plot.margin=unit(c(.1,.1,.1,.1), "cm"),
+        axis.title.y = element_text(size = rel(1.3))) +
+  xlab("Mean Annual Precipitation (mm)") +
+  ylab(expression(paste(Delta," % Regen"))) +
+  annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
 
 # make legend
-leg <- plot_raw_change(merged,modeln="AK", ylab="", title="TC")
+leg <-   ggplot(data=rcp85[rcp85$model=="AK",], aes(x=bio12,y=change)) +
+  geom_point(aes(color=GCM), size=.5) +
+  scale_color_manual(values=cbPalette, name="GCM") +
+  geom_hline(yintercept=0, linetype="dashed") +
+  stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
+  scale_fill_manual(values=cbPalette, name="GCM") 
 leg2 <- leg + theme(legend.position="top")
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -391,8 +443,21 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save Plot
-changepre <- grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
-                          heights = unit(c(9,160), "mm"))
+# first, fix annoying issue with axes not lining up
+gp1<- ggplot_gtable(ggplot_build(CC))
+gp2<- ggplot_gtable(ggplot_build(AK))
+gp3<- ggplot_gtable(ggplot_build(DGVM))
+gp4<- ggplot_gtable(ggplot_build(DRS))
+#gprects<- ggplot_gtable(ggplot_build(prects))
+maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3], gp3$widths[2:3], gp4$widths[2:3])
+gp1$widths[2:3] <- maxWidth
+gp2$widths[2:3] <- maxWidth
+gp3$widths[2:3] <- maxWidth
+gp4$widths[2:3] <- maxWidth
+changepre <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2, 
+                                          heights = unit(c(72,82), "mm")), ncol=1,
+                      heights = unit(c(9,154), "mm"))
+# Save Plot
 ggsave(paste(fpath, "change_GCM_rcp85_pptgradient.eps", sep=""), plot=changepre, 
        width = col2, height = 169, units = 'mm')
 ################################################################################
