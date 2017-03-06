@@ -176,3 +176,9 @@ table(d3$issue,d3$consensus, d3$scenario)
 # 3. Is the difference due to CO2?
 # Evidence: GCM agrees when run with constant CO2 (or agrees on decrease for simple 
 #temp manipulation, but shows increase with GCM runs)
+
+# 4. Can I group based on bioclim variables?
+# Evidence: run multinomial logit, cart, some other method
+library(nnet)
+mod <- multinom(issue ~ bio1 + bio2 + bio3, c2)
+summary(mod)
