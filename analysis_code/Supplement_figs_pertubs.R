@@ -7,11 +7,19 @@ rm(list=ls())
 library(tidyverse); theme_set(theme_bw(base_size=10)) # sized for ppt
 library(gridExtra)
 library(splines)
+library(grid)
 
 #***USER MUST CHANGE***
 # paths to data and figure folders: Must use full path for readOGR to work
 dpath <- "/Users/poulterlab1/version-control/sageseer/data/"
 fpath <- "/Users/poulterlab1/version-control/sageseer/figures/"
+
+#----------------------------------------
+# Journal Specifications for figure size
+# Global Change Bio:
+col1 <- 80 # 1 column width = 80 mm
+col2 <- 169 # 2 column width = 169 mm
+#--------------------------------------
 
 # Pull in merged data and manipulate
 merged <- read.csv(paste(dpath, "merged_data_perturb.csv", sep="")) %>%
@@ -103,12 +111,10 @@ get_legend<-function(myggplot){
 legend <- get_legend(leg2)
 
 # Save Plot
-png(paste(fpath, "temp_sensitivity.png", sep=""),
-    width = 420, height = 320, units = 'mm', res = 450)
-grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
+temps <- grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
              heights = c(0.2, 2.5,0))
-
-dev.off()
+ggsave(paste(fpath, "temp_sensitivity.eps", sep=""), plot=temps, 
+       width = col2, height = col2, units = 'mm')
 
 
 ################################################################################
@@ -176,50 +182,65 @@ m5 <- m4 %>% mutate(abschange=abs(change)) %>%
             upper=meanchange+sd(change)/sqrt(length(change))) %>%
   mutate(var2=ifelse(var=="ppt", "Precipitation","Temperature"))
 head(m5)
+m5$mag <- as.factor(m5$mag)
+levs = c("+.2C","-10%","+10%","+20%","+2C","+4C")
+levels(m5$mag) <- levs
+
+# Set up separate data frame so can annotate individual facet
+ann_text <- data.frame(mag = .9,meanchange = Inf,
+                       var2 = factor("Precipitation",
+                                     levels = c("Precipitation","Temperature")))
+
+vj <- 1.5 # vertical adjustment for panel label, pos moves down
+hj <- .1 # horizotal placement of panel label, neg moves right
+greys <- c('#f7f7f7','#d9d9d9','#bdbdbd','#969696','#636363','#252525')
 AK <- 
-  ggplot(data=m5[m5$model=="AK",], aes(x=as.factor(var2), y=meanchange, group=as.factor(mag))) +
-  geom_bar(stat="identity", position=position_dodge(width=0.9), fill="white",
+  ggplot(data=m5[m5$model=="AK",], aes(x=mag, y=meanchange)) +
+  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
            color="black") +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
-  ylab(expression(paste(Delta," % Cover"))) +
-  theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "TC", vjust=1.3, hjust=-.2, size=8)
-
-CC <- 
-  ggplot(data=m5[m5$model=="randfor",], aes(x=as.factor(var2), y=meanchange, group=as.factor(mag))) +
-  geom_bar(stat="identity", position=position_dodge(width=0.9), fill="white",
-           color="black") +
-  geom_hline(yintercept=0) +
-  geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
-  xlab("Variable") +
-  ylab(expression(paste(Delta," Max % Cover"))) +
-  #scale_y_continuous(limits=c(-11,14)) +
-  #annotate("text", x=.5, y = Inf, label = "(a)", vjust=1.3, hjust=1.3, size=4) +
-  theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "SC", vjust=1.3, hjust=-.2, size=8)
-
-KR <- 
-  ggplot(data=m5[m5$model=="DGVM-full-400ppm",], aes(x=as.factor(var2), y=meanchange, group=as.factor(mag))) +
-  geom_bar(stat="identity", position=position_dodge(width=0.9), fill="white",
-           color="black") +
-  geom_hline(yintercept=0) +
-  geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
-  xlab("Variable") +
-  ylab(expression(paste(Delta," % Cover"))) +
+  ylab(expression(paste(Delta," % Regen"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-        legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "DGVM", vjust=1.3, hjust=-.2, size=8)
+        legend.position="none",
+        axis.text.x = element_blank()) +
+  facet_wrap(~var2, strip.position = "bottom", scales = "free_x") +
+  theme(panel.spacing = unit(0, "lines"), 
+        strip.background = element_blank(),
+        strip.placement = "outside",
+        panel.background = element_rect(fill="white"),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black", size=.1),
+        strip.text.x = element_blank()) +
+  geom_text(data = ann_text,label = "(b) TC", hjust=hj, vjust=vj, size=3 )
 
-DRS <- 
-  ggplot(data=m5[m5$model=="DRS",], aes(x=as.factor(var2), y=meanchange, group=as.factor(mag))) +
-  geom_bar(stat="identity", position=position_dodge(width=0.9), fill="white",
+CC <- 
+  ggplot(data=m5[m5$model=="randfor",], aes(x=mag, y=meanchange)) +
+  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
+           color="black") +
+  geom_hline(yintercept=0) +
+  geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
+  xlab("Variable") +
+  ylab(expression(paste(Delta," % Regen"))) +
+  theme(axis.title.x=element_blank(),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+        legend.position="none",
+        axis.text.x = element_blank()) +
+  facet_wrap(~var2, strip.position = "bottom", scales = "free_x") +
+  theme(panel.spacing = unit(0, "lines"), 
+        strip.background = element_blank(),
+        strip.placement = "outside",
+        panel.background = element_rect(fill="white"),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black", size=.1),
+        strip.text.x = element_blank()) +
+  geom_text(data = ann_text,label = "(a) SC", hjust=hj, vjust=vj, size=3 )
+
+KR <- 
+  ggplot(data=m5[m5$model=="DGVM-full-400ppm",], aes(x=mag, y=meanchange)) +
+  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
            color="black") +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
@@ -228,7 +249,40 @@ DRS <-
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "SS", vjust=1.3, hjust=-.2, size=8)
+  facet_wrap(~var2, strip.position = "bottom", scales = "free_x") +
+  theme(panel.spacing = unit(0, "lines"), 
+        strip.background = element_blank(),
+        strip.placement = "outside",
+        panel.background = element_rect(fill="white"),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black", size=.1)) +
+  geom_text(data = ann_text,label = "(c) DGVM", hjust=hj, vjust=vj, size=3 )
+
+
+
+
+
+DRS <- 
+  ggplot(data=m5[m5$model=="DRS",], aes(x=mag, y=meanchange)) +
+  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
+           color="black") +
+  geom_hline(yintercept=0) +
+  geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
+  xlab("Variable") +
+  ylab(expression(paste(Delta," % Regen"))) +
+  theme(axis.title.x=element_blank(),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+        legend.position="none") +
+  facet_wrap(~var2, strip.position = "bottom", scales = "free_x") +
+  theme(panel.spacing = unit(0, "lines"), 
+        strip.background = element_blank(),
+        strip.placement = "outside",
+        panel.background = element_rect(fill="white"),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black", size=.1)) +
+   geom_text(data = ann_text,label = "(d) SS", hjust=hj, vjust=vj, size=3 )
+DRS
+
 
 # Save Plot
 # first, fix annoying issue with axes not lining up
@@ -236,16 +290,15 @@ gp1<- ggplot_gtable(ggplot_build(CC))
 gp2<- ggplot_gtable(ggplot_build(AK))
 gp3<- ggplot_gtable(ggplot_build(KR))
 gp4<- ggplot_gtable(ggplot_build(DRS))
-#gprects<- ggplot_gtable(ggplot_build(prects))
 maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3], gp3$widths[2:3], gp4$widths[2:3])
 gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
 gp3$widths[2:3] <- maxWidth
 gp4$widths[2:3] <- maxWidth
-grid.arrange(arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,heights = unit(c(77,80), "mm")))
 
-tiff(paste(fpath, "Fig4_perturb_magchange_bw.tiff", sep=""),
-     width = 169, height = 169, units = 'mm', res = 300)
-grid.arrange(arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,heights = unit(c(77,80), "mm")))
-dev.off()
+# render and save plot
+pmagchange <-grid.arrange(gp1,gp2,gp3,gp4, ncol=2,
+                        heights = unit(c(74,80), "mm"))
+ggsave(paste(fpath, "perturb_magchange_bw.eps", sep=""), plot=pmagchange, 
+       width = col2, height = col2, units = 'mm')
 
