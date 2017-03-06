@@ -9,10 +9,6 @@ library(rgdal)
 dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
 fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
 
-# List of "bad" sites
-#bad <- c(495, 579, 494, 582, 580, 634, 633, 632, 668, 496, 497)
-bad <- c(495,496,497,498,580,581,583,632,633,634,668)
-
 # Pull in merged data and manipulate
 merged <- read.csv(paste(dpath, "merged_data_GCM.csv", sep="")) %>%
   mutate(change=(predicted-baseline))

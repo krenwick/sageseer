@@ -69,6 +69,13 @@ table(d3$issue,d3$consensus)
 # convert to percentage
 round(table(d3$issue,d3$consensus)/3570, 2)
 
+# look at percent of sites where disagree, not percent of total:
+t <- table(d3$issue, d3$consensus)
+t2 <- as.data.frame(t) %>%
+  spread(Var2,Freq) %>%
+  mutate(perc.d=decrease/(increase+decrease)) %>%
+  mutate(perc.i=increase/(increase+decrease))
+
 ################################################################################
 # Look for climatic cause of differences
 ################################################################################
@@ -78,22 +85,30 @@ clim <- merged %>% group_by(site) %>% summarise_each(funs(mean))
 # Look at disagreement along PCA axes
 ###########################################
 d4 <- filter(d3, scenario=="rcp85", GCM=="CCSM4")
-p1 <- merge(d4,clim, by=c("site"), all.y=F)
+p1 <- merge(d4,clim, by=c("site"), all.y=F) %>%
+  filter(consensus != "unsure" & issue!="none")
+p2 <- merge(d4,clim, by=c("site"), all.y=F) %>%
+  filter(consensus == "unsure" | issue=="none")
+
 ggplot(data=p1, aes(x=Comp.1*-1,y=Comp.2, color=issue, shape=consensus)) +
-  geom_point()
+  geom_point(data=p2, aes(x=Comp.1*-1,y=Comp.2),color="black", shape=20) +
+  geom_point() 
+  
 
 
 
-c1 <- filter(d3, consensus=="increase")
-c2 <- merge(c1,clim, by=c("site"), all.y=F)
 
-ggplot(data=c2, aes(x=issue, y=bio1)) +
-  geom_boxplot(notch=T)
+c2 <- merge(d3,clim, by=c("site"), all.y=F)
+
+ggplot(data=c2, aes(x=issue, y=bio3)) +
+  geom_boxplot(notch=T) +
+  facet_wrap(~consensus)
 # Time series disagrees on hot sites.
-# DGVM disagrees on sites with less seasonality (bio3, bio7)
+# DGVM disagrees (more pessimistic) on sites with less seasonality (bio3, bio7)
 # winter and summer have similar temp. Why? Competition? check.
 # also more winter precip. Sites cool, wet, strong seasonality of precip, weak
 # seasonality of temp.
+# DGVM more optimistic on low diurnal range (high humidity), bio3
 
 # Flip this and look at exceptions in the other direction
 do1 <- filter(d3, consensus=="decrease")
@@ -105,6 +120,9 @@ ggplot(data=do2, aes(x=issue, y=bio3)) +
 # DGVM again differs on diurnal temp range (bio2)
 # DGVM lower bio3- opposite of what we saw with reverse difference
 
+# Can I test this more formally?
+m1 <- aov(bio1~issue, data=c2)
+summary(m1)
 ################################################################################
 # Look for magnitude cause: does RCP or GCM matter?
 ################################################################################
@@ -141,10 +159,16 @@ nrow(t1) #434 negs
 t1 <- filter(merged, model=="DGVM", change<=-1)
 nrow(t1) #101 where drops by > -1
 
-
+###############################################################################
 # 1. Is the difference due to threshold location? Evidence: model agrees for 8.5,
 # not for 4.5. Or agrees for extreme GCM, not mild. Basically, disagrees on the threshold
 # where response switches from 1 to the other
+###############################################################################
+table(d3$issue,d3$consensus, d3$scenario)
+# For GISSM: yes. disagrees lots more for RCP4.5, likely lower temp threshold
+# then with 8.5, other models have caught up on more sites
+# no clear pattern with other models
+# not surprising: GISSM the only model where rcp made big difference
 
 # 2. Is the difference due to response to a specific variable?
 # Evidence: for that site, agree on temp impact but not precip.

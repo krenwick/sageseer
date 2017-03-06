@@ -7,21 +7,18 @@ library(tidyverse); theme_set(theme_bw(base_size=20)) # sized for ppt
 library(gridExtra)
 library(splines)
 
-# paths to data and folder for figures
-dpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/"
-fpath <- "/Users/poulterlab1/Box Sync/sageseer/ModelComparison/Figures/"
+#***USER MUST CHANGE***
+# paths to data and figure folders: Must use full path for readOGR to work
+dpath <- "/Users/poulterlab1/version-control/sageseer/data/"
+fpath <- "/Users/poulterlab1/version-control/sageseer/figures/"
+
 
 # Color Palette for GCMs (color-blind friendly)
 cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 
-# List of "bad" sites
-bad <- c(495,496,497,498,580,581,583,632,633,634,668,62)
-
 # Pull in merged data and manipulate
-merged <- read.csv(paste(dpath, "merged_data-co2.csv", sep="")) %>%
+merged <- read.csv(paste(dpath, "merged_data_perturb.csv", sep="")) %>%
   mutate(change=(predicted-baseline))
-merged2 <- filter(merged, site %in% bad==FALSE)
-merged <- merged2
 unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) %>%
   dplyr::select(site,elev:NA_L1NAME)
 
@@ -43,13 +40,6 @@ d2 <- m4 %>%
   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
   filter(n==max(n))
 
-d3 <- filter(d2, site %in% bad==FALSE)
-bads <- filter(d2, site %in% bad)
-bads2 <- filter(merged, site %in% bad) %>% dplyr::select(site, model, baseline, change) %>%
-  filter(model!="MaxEntBin"&model!="MaxEntRaw")
-dim(d3)
-table(d3$conf2)
-table(d3$consensus)
 table(d2$consensus,d2$var,d2$mag)
 
 ################################################################################
@@ -101,15 +91,17 @@ summary(lm(data=b2[b2$model=="DRS",], change~mag*bio1)) # 11.5
 ################################################################################
 # Plot the absolute change, in original scale, MAT gradient, 4-plot grid
 ################################################################################
+tempCol <- c('#fee6ce','#fdae6b','#e6550d')
+tempCol <- c('yellow1','orange2','orangered3')
 plot_raw_change <- function(data,  modeln, ylab,title) {
   d <- data %>% dplyr::filter(model==modeln, var=="temp")
   plot <- ggplot(data=d, aes(x=bio1/10,y=change)) +
     geom_point(aes(color=as.factor(mag)), size=1) +
-    scale_color_manual(values=cbPalette, name="GCM") +
+    scale_color_manual(values=tempCol, name="GCM") +
     geom_hline(yintercept=0, linetype="dashed") +
     stat_smooth(aes(fill=as.factor(mag), color=as.factor(mag)),method = "lm") +
     #stat_smooth(aes(fill=as.factor(mag), color=as.factor(mag))) +
-    scale_fill_manual(values=cbPalette, name="GCM") +
+    scale_fill_manual(values=tempCol, name="Temperature Change") +
     ylab("Change in Response") +
     theme(legend.position="none", legend.title=element_blank(),
           panel.background=element_blank(),plot.background=element_blank(),
@@ -117,17 +109,19 @@ plot_raw_change <- function(data,  modeln, ylab,title) {
           plot.margin=unit(c(.1,.1,.1,.1), "cm"),
           axis.title.y = element_text(size = rel(1.3))) +
     xlab("MAT") +
-    scale_x_continuous(limits=c(-1.9,20.8)) +
+    scale_x_continuous(limits=c(-1.9,22.9)) +
     ylab(ylab) +
     annotate("text", x=Inf, y = Inf, label = title, vjust=1.3, hjust=1.3, size=8)
   return(plot)
 }
-DGVM <- plot_raw_change(merged2,modeln="DGVM-full-400ppm", ylab=expression(paste(Delta," % Cover")), title="DVM")
+DGVM <- plot_raw_change(merged,modeln="DGVM-full-400ppm", ylab=expression(paste(Delta," % Cover")), title="DVM")
 DGVM
-CC <- plot_raw_change(merged2,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
-AK <- plot_raw_change(merged2,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
-DRS <- plot_raw_change(merged2,modeln="DRS", ylab=expression(paste(Delta," % Regen")), title="SS")
-
+CC <- plot_raw_change(merged,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
+AK <- plot_raw_change(merged,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
+DRS <- plot_raw_change(merged,modeln="DRS", ylab=expression(paste(Delta," % Regen")), title="SS")
+CC
+AK
+DRS
 # make legend
 leg <- plot_raw_change(merged,modeln="AK", ylab="", title="TC")
 leg2 <- leg + theme(legend.position="top")

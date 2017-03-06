@@ -111,6 +111,24 @@ ggplot(data=mapdat, aes(y=latitude.x, x=longitude.x)) +
   theme(legend.justification=c(0,0), legend.position=c(0,0))
 dev.off()
 
+# Map just for Utah to zoom in on problem sites
+UT <- states[states$STATE_ABBR=="UT",]
+ggplot(data=mapdat, aes(y=latitude.x, x=longitude.x)) +
+  #geom_polygon(data=UT, aes(long,lat, group), fill=NA,color="black") +
+  geom_point(aes(color=consensus),size = 2) +
+  geom_text(aes(label=site), nudge_y = 0.002) +
+  scale_color_manual(labels=c("Decrease","Increase", "Unsure"),
+                    values=c("#d7191c","#2c7bb6","grey"),name="Model\nConsensus") +
+  #scale_fill_gradient2(low="red", high="blue",
+                      # name="Model\nAgreement\n",
+                       #breaks=c(-20,0,20),labels=c(-20,0,20),
+                       #limits=c(-20,20)) +
+  ylab("Longitude") +
+  xlab("Latitude") +
+  #coord_fixed(1.3) +
+  xlim(c(-112.14,-111.8)) +
+  ylim(c(40.38,40.46)) 
+
 ##########################################################
 # Try plotting points on base map from google
 library(ggmap)
@@ -199,7 +217,7 @@ names(md2)[18:36] <- bioclimNames
 
 jpeg(paste(fpath, "MAT_by_consensus_group.jpeg", sep=""),
      width = 320, height = 220, units = 'mm', res = 300)
-ggplot(data=md2,aes(y=MAT,x=as.factor(conf2))) +
+ggplot(data=md2,aes(y=bio1/10,x=as.factor(conf2))) +
   geom_boxplot(aes(color=conf2)) +
   geom_point(aes(color=conf2)) +
   scale_color_gradient2(name="Model\nAgreement") +
@@ -208,12 +226,18 @@ dev.off()
 
 jpeg(paste(fpath, "MAP_by_consensus_group.jpeg", sep=""),
      width = 320, height = 220, units = 'mm', res = 300)
-ggplot(data=md2,aes(y=MAP,x=as.factor(conf2))) +
+ggplot(data=md2,aes(y=bio12,x=as.factor(conf2))) +
   geom_boxplot(aes(color=conf2)) +
   geom_point(aes(color=conf2)) +
   scale_color_gradient2(name="Model\nAgreement") +
   xlab("Consensus on Change")
 dev.off()
+
+ggplot(data=md2,aes(y=bio12,x=bio1/10)) +
+  #geom_boxplot(aes(color=conf2)) +
+  geom_point(aes(color=conf2)) +
+  scale_color_gradient2(name="Model\nAgreement") +
+  xlab("Consensus on Change")
 
 ggplot(data=md2,aes(y=TrangeD,x=as.factor(conf2))) +
   geom_boxplot(aes(color=conf2)) +
@@ -283,7 +307,7 @@ bioclimNames <- c("MAT", # BIO1 = Annual Mean Temperature
 # bio clim column names  
 # ----------------------------------------------------------
 m7 <- m6 %>%
-  select(MAT:bio19)
+  dplyr::select(bio1:bio19)
 names(m7) <- bioclimNames
 
 # Which bioclim varaibles are highly correlated?
@@ -293,7 +317,7 @@ e2 <- envcor %>% mutate(var1=rownames(envcor)) %>%
   filter(abs(cors)>.8 & abs(cors)<1) %>%
   arrange(var1)
 # cut: PwetM,PwetQ,PdryQ,PcoldQ,Tmaxwarm,Tmincold,Tmeanwarm,Tmeancold,TrangeY
-m8 <- select(m7, -PwetM, -PwetQ, -PdryQ, -PcoldQ, -Tmaxwarm, -Tmincold, 
+m8 <- dplyr::select(m7, -PwetM, -PwetQ, -PdryQ, -PcoldQ, -Tmaxwarm, -Tmincold, 
              -Tmeanwarm, -Tmeancold, -TrangeY)
 
 out.pca <- prcomp(m8,scale.=T)
@@ -315,3 +339,4 @@ ggbiplot_k(out.pca, choices=c(1,2),obs.scale = 1, var.scale = 1,
   theme_bw()
 
 head(mapdat)
+

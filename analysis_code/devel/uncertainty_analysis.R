@@ -110,6 +110,7 @@ summary(m12, corr=F) # converges! no error messages
 m13 <- lmer(data=dat3, formula=change.scale ~scenario + GCM + model + 
               (scenario|GCM.mod) + (GCM|scen.mod) + (model|clim) + (1|site))
 summary(m13, corr=F) # won't converge but still gave output
+anova(m13)
 
 # Actually, I don't want the random affects acting on the intercept (just site)
 m14 <- lmer(data=dat3, formula=change.scale ~scenario + GCM + model + 
@@ -211,7 +212,21 @@ t11 <- lmer(data=dat6, formula=change.scale~model*GCM*scenario
 bbmle::AICtab(t10,t11) #t11 wins- makes sense
 # For chosen model, look at coefficients
 c <- coef(summary(t11))[ , "Estimate"]
-c2 <- as.data.frame(c)
+c2 <- as.data.frame(c) 
+c2$name <- rownames(c2)
+c3 <- c2 %>%
+  mutate(abs=abs(c)) %>%
+  filter(grepl('DGVM', name))
+
+summary(t11)
+anova(t11)
+
+#If reference GCM and RCP, impact of switching model= its individual effect.
+# all other coefficients will be zero
+# say switch to rcp8.5. Add it's indiv. effect. then switch model- effect size is
+# the indiv effect + coef of interaction with rcp8.5.
+
+
 # Actually... I might be more interested in the variance than the fixed effects
 anova(t11)
 anova(t5)
@@ -254,6 +269,7 @@ summary(stepAIC(b4)) # keeps all
 bbmle::AICtab(b1,b2,b3,b4,b13) # b13 is best by a mile. Then b3,1,4,2
 
 save.image("uncert_models.RData")
+source("uncert_models.RData")
 
 #####################################################
 

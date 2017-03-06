@@ -308,10 +308,11 @@ library(MASS)
 m5 <- mutate(m4, direction=ifelse(cat=="decrease", 0, 1))
 m1 <- stepAIC(lm(data=m5, direction~model*GCM*scenario))
 anova(m1) #everything matters. For primary effects, model > site > GCM > scenario
+effects(m1)
 library(lme4)
-m1 <- lmer(data=m5, direction~model*GCM*scenario + (1|site))
-summary(m1)
-anova(m1)
+m2 <- lmer(data=m5, direction~model*GCM*scenario + (1|site))
+summary(m2)
+anova(m2)
 
 
 
@@ -366,3 +367,4 @@ summary(m1)
 # Look at difference between GCMs:
 m1 <- lm(data=m4, change~scenario*cat)
 summary(m1)
+
