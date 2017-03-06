@@ -198,7 +198,7 @@ DGVM <-
         legend.text.align = 0,
         plot.margin=unit(c(.1,.1,.1,.1), "cm"),
         axis.title.y = element_text(size = rel(1.3))) +
-  xlab("MAT") +
+  xlab(expression("Mean Annual Temperature ("*~degree*"C)")) +
   ylab(expression(paste(Delta," % Cover"))) +
   annotate("text", x=Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=4)
 
@@ -256,7 +256,7 @@ DRS <-
         legend.text.align = 0,
         plot.margin=unit(c(.1,.1,.1,.1), "cm"),
         axis.title.y = element_text(size = rel(1.3))) +
-  xlab("MAT") +
+  xlab(expression("Mean Annual Temperature ("*~degree*"C)")) +
   ylab(expression(paste(Delta," % Regen"))) +
   annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
 
@@ -296,7 +296,7 @@ both2 <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
 ggsave(paste(fpath, "change_GCM_MAT_rcp85_color_line.eps", sep=""), plot=both2,
        width = col2, height = col2, units = 'mm')
 
-# Black and White for print:-----------------------------------
+# Black and White for print:----------------------------------------------------
 # Focus on the model near the center (CESM1-CAM5):
 CESM <- filter(merged, GCM=="CESM1-CAM5")
 plot_raw_change <- function(data,  modeln, ylab,title) {
