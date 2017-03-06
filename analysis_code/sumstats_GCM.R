@@ -83,6 +83,16 @@ m5 <- m4 %>%
 mean(m5$perc) # 20% flip, 80% consistent
 # 80% = where ALL 5 agree. Higher if look at 4/5.
 
+# Vary by RCP?
+m4 %>% 
+  group_by(site,model,scenario) %>%
+  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  group_by(model,scenario) %>%
+  summarise(nochange=sum(n.increase==5|n.decrease==5), n=n()) %>%
+  mutate(perc=(n-nochange)/n) %>%
+  group_by(scenario) %>%
+  summarise(mean(perc))
+
 # Look at 5 vs. 4/5 GCMs
 d2 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%
@@ -108,10 +118,20 @@ m5 <- m4 %>%
   group_by(site,scenario,GCM) %>%
   summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
   group_by(scenario,GCM) %>%
-  summarise(nochange=sum(n.increase==2|n.decrease==2), n=n()) %>%
+  summarise(nochange=sum(n.increase==4|n.decrease==4), n=n()) %>%
   mutate(perc=(n-nochange)/n)
 m5 # All the time... rare for all 4 to agree
-mean(m5$perc) # 83%
+mean(m5$perc) 
+
+# Does agreement among models vary by RCP?
+m4 %>% 
+  group_by(site,scenario,GCM) %>%
+  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  group_by(scenario,GCM) %>%
+  summarise(nochange=sum(n.increase==4|n.decrease==4), n=n()) %>%
+  mutate(perc=(n-nochange)/n) %>%
+  group_by(scenario) %>%
+  summarise(mean(perc))
 
 # For paper, more clear to say how often is the direction of change consistent?
 
@@ -178,15 +198,19 @@ kappa2(kap2)
 ################################################################################
 # Look at correlations in predicted change between models
 # Use spearmans rank correlation, since can't assume parametric
-# for each model, take mean response across RCP x GCM combos
-# changed mind- don't take the mean...
+
+# first: eco models
 m8 <- m4 %>% group_by(site, model) %>%
   dplyr::select(site,model,GCM,scenario,change) %>%
-    #summarise_each(funs(mean)) %>%
   spread(model,change)
 m9 <- as.matrix(m8[,4:7])  
 
 cors <- rcorr(m9, type="spearman") # moderately laughable
+cs <- as.matrix(cors$r,2)
+all6 <- c(cs[2:4,1],cs[3:4,2],cs[4,3])
+round(range(all6),2)
+round(mean(all6),2)
+
 p.corrs <- as.numeric(cors$P)
 round(p.adjust(p.corrs, method="holm"),2) # all except GCM:randfor significant
 
@@ -198,6 +222,12 @@ m11 <- as.matrix(m10[,4:8])
 cors <- rcorr(m11, type="spearman") # GCM pairs tend to agree- more than models!
 p.corrs <- as.numeric(cors$P)
 round(p.adjust(p.corrs, method="holm"),2) # all significant
+cors
+
+cs <- as.matrix(cors$r,2)
+all10 <- c(cs[2:5,1],cs[3:5,2],cs[4:5,3],cs[5,4])
+round(range(all10),2)
+round(mean(all10),2)
 
 # look at correlation among rcps
 m12 <- m4 %>% group_by(site, scenario) %>%
@@ -207,8 +237,30 @@ m13 <- as.matrix(m10[,4:5])
 cors <- rcorr(m13, type="spearman") # .67, significant
 p.corrs <- as.numeric(cors$P)
 round(p.adjust(p.corrs, method="holm"),2) # all significant
+cors
 
 # calculate mean up and down for each. How does it change when switch?
+# Ask: is the mean (in each direction) significantly different?
+# OR: absolute value?
+# First, RCP:
+m4 %>% group_by(scenario) %>%
+  summarise(mean(abs(change)))
+a1 <- lmer(data=m4, formula=change~scenario + (scenario|site))
+anova(a1) #significant
+
+
+# Next, GCM:
+m4 %>% group_by(GCM) %>%
+  summarise(mean(abs(change)))
+a2 <- aov(data=m4, formula=change~GCM)
+summary(a2) # significant
+
+# Next, model:
+m4 %>% group_by(model) %>%
+  summarise(mean(abs(change)))
+a3 <- aov(data=m4, formula=change~model)
+summary(a3) # yep.
+
 
 
 ################################################################################
