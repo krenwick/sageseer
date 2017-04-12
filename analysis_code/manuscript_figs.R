@@ -490,6 +490,10 @@ m5$GCM <- factor(m5$GCM, levels = c("GISS-E2-H-CC","MPI-ESM-LR","CCSM4","CESM1-C
 yelred <- c("#ffffb2","#fecc5c","#fd8d3c","#f03b20","#bd0026")
 bw <- c('#f7f7f7','#cccccc','#969696','#636363','#252525')
 
+# Determine appropriate ylims for cover models
+summary(m5[m5$model!="GISSM_v1.6.3",])
+#-8 to 12
+
 # Make plots in color-----------------------------------------------------
 vj <- 1.5 # vertical adjustment for panel label, pos moves down
 hj <- -.1 # horizotal placement of panel label, neg moves right
@@ -504,6 +508,7 @@ AK <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
+  ylim(c(-8,12)) +
   #annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
   annotate("text", x=-Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=hj, size=3)
 
@@ -520,6 +525,7 @@ CC <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
+  ylim(c(-8,12)) +
   #annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
   annotate("text", x=-Inf, y = Inf, label = "(a) Spatial Correlations", vjust=vj, hjust=hj, size=3)
 
@@ -534,6 +540,7 @@ KR <-
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
+  ylim(c(-8,12)) +
   annotate("text", x=-Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=3)
 
 DRS <- 
@@ -604,6 +611,7 @@ AK <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
+  ylim(c(-8,12)) +
   #annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
   annotate("text", x=-Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=hj, size=3)
 
@@ -619,6 +627,7 @@ CC <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none")+
+  ylim(c(-8,12)) +
   #annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
   annotate("text", x=-Inf, y = Inf, label = "(a) Spatial Correlations", vjust=vj, hjust=hj, size=3)
 
@@ -633,6 +642,7 @@ KR <-
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none")+
+  ylim(c(-8,12)) +
   annotate("text", x=-Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=3)
 
 DRS <- 
