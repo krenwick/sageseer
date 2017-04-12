@@ -79,7 +79,7 @@ d2 <- m4 %>%
   mutate(consensus=ifelse(conf_cat==n.increase,"increase","decrease")) %>%
   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"unsure",consensus)) %>%
   filter(n==max(n))
-dim(d2)
+d2$consensus <- factor(d2$consensus, levels=c("Decrease","Unsure","Increase"))
 
 ################################################################################
 # Figure 1:
@@ -170,7 +170,7 @@ legend <- get_legend(leg2)
 
 # Save map and PCA as one figure
 both <- grid.arrange(legend,p2,p1, ncol=1, heights=c(10,80,80))
-ggsave(paste(fpath, "PCA_map.eps", sep=""), plot=both, width = col1, height = 170, 
+ggsave(paste(fpath, "PCA_map.pdf", sep=""), plot=both, width = col1, height = 170, 
        units = 'mm')
 
 ################################################################################
@@ -293,7 +293,7 @@ both2 <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
                       heights = unit(c(9,154), "mm"))
 
 #eps doesn't support transparency.
-ggsave(paste(fpath, "change_GCM_MAT_rcp85_color_line.eps", sep=""), plot=both2,
+ggsave(paste(fpath, "change_GCM_MAT_rcp85_color_line.pdf", sep=""), plot=both2,
        width = col2, height = col2, units = 'mm')
 
 # Black and White for print:----------------------------------------------------
@@ -339,7 +339,7 @@ legend <- get_legend(leg2)
 # Save Plot
 bwtemp <- grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
                       heights = unit(c(9,160), "mm"))
-ggsave(paste(fpath, "MAT_axis_CESM_bw.eps", sep=""), plot=bwtemp, width = col2, height = 169, 
+ggsave(paste(fpath, "MAT_axis_CESM_bw.pdf", sep=""), plot=bwtemp, width = col2, height = 169, 
        units = 'mm')
 
 ################################################################################
@@ -458,7 +458,7 @@ changepre <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
                                           heights = unit(c(72,82), "mm")), ncol=1,
                       heights = unit(c(9,154), "mm"))
 # Save Plot
-ggsave(paste(fpath, "change_GCM_rcp85_pptgradient.eps", sep=""), plot=changepre, 
+ggsave(paste(fpath, "change_GCM_rcp85_pptgradient.pdf", sep=""), plot=changepre, 
        width = col2, height = 169, units = 'mm')
 ################################################################################
 # Figure xx:
@@ -572,7 +572,7 @@ grid.arrange(arrangeGrob(gp1,gp2,gp3,gp4, ncol=2))
 colorbar <-grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
             heights = unit(c(77,80), "mm")), ncol=1,
              heights = unit(c(9,160), "mm"))
-ggsave(paste(fpath, "GCM_magchange_color.eps", sep=""), plot=colorbar, 
+ggsave(paste(fpath, "GCM_magchange_color.pdf", sep=""), plot=colorbar, 
        width = col2, height = col2, units = 'mm')
 
 
@@ -669,14 +669,14 @@ grid.arrange(arrangeGrob(gp1,gp2,gp3,gp4, ncol=2))
 GCM_bar_bw <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
                           heights = unit(c(77,80), "mm")), ncol=1,
                            heights = unit(c(9,160), "mm"))
-ggsave(paste(fpath, "GCM_magchange_bw.eps", sep=""), plot=GCM_bar_bw,
+ggsave(paste(fpath, "GCM_magchange_bw.pdf", sep=""), plot=GCM_bar_bw,
        width = col2, height = col2, units = 'mm')
 
 ################################################################################
 # Figure xx:
 # Boxplot showing mean climate by response category (RCP8.5)
 ################################################################################
-d2 <- merged %>%
+d4 <- merged %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
   filter(scenario=="rcp85") %>% #exclude RCP4.5 output
   group_by(site) %>%
@@ -687,15 +687,15 @@ d2 <- merged %>%
   mutate(consensus=ifelse(conf_cat==n.increase,"Increase","Decrease")) %>%
   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"Unsure",consensus)) %>%
   filter(n==max(n))
-dim(d2)
-d2$consensus <- factor(d2$consensus, levels=c("Decrease","Unsure","Increase"))
+dim(d4)
+d4$consensus <- factor(d4$consensus, levels=c("Decrease","Unsure","Increase"))
 
-boxplot <- ggplot(data=d2, aes(x=consensus,y=MAT, group=consensus)) +
+boxplot <- ggplot(data=d4, aes(x=consensus,y=MAT, group=consensus)) +
   geom_boxplot(notch=T) +
   coord_flip() +
   xlab("Change in Performance") +
-  ylab(expression("Mean Annual Temperature ("*~degree*"C)")) +
-ggsave(paste(fpath, "consensus_MAT_boxplot_bw.eps", sep=""), plot=boxplot,
+  ylab(expression("Mean Annual Temperature ("*~degree*"C)")) 
+ggsave(paste(fpath, "consensus_MAT_boxplot_bw.pdf", sep=""), plot=boxplot,
        width = col1, height = col1*.7, units = 'mm')
 
 
@@ -703,24 +703,33 @@ ggsave(paste(fpath, "consensus_MAT_boxplot_bw.eps", sep=""), plot=boxplot,
 # Plot scatterplot of consensus categories along MAT gradient
 # Add in smoothed histogram
 ################################################################################
-pts <- ggplot(data=d2, aes(x=MAT, y=(conf2))) +
-  geom_point(aes(fill=conf2), color="black", pch=21) +
-  #geom_smooth(span=.9) +
-  scale_fill_gradient2(low="red", high="blue",
+vj <- 1.5 # vertical adjustment for panel label, pos moves down
+hj <- -.1 # horizotal placement of panel label, neg moves right, pos left
+
+pts <- ggplot(data=d4, aes(x=MAT, y=(conf2))) +
+  # geom_point(aes(fill=conf2), color="black", pch=21) +
+  # scale_fill_gradient2(low="red", high="blue",
+  #                      name="Model\nAgreement\n",
+  #                      breaks=c(-20,0,20),labels=c(-20,0,20),
+  #                      limits=c(-20,20)) +
+  geom_point(aes(color=conf2)) +
+  scale_color_gradient2(low="red", high="blue",
                        name="Model\nAgreement\n",
                        breaks=c(-20,0,20),labels=c(-20,0,20),
                        limits=c(-20,20)) +
   geom_hline(yintercept=0) +
   xlab("Mean Annual Temperature") +
   ylab("Vulnerability Index") +
-  geom_vline(xintercept=min(d2[d2$consensus=="Decrease",]$MAT), linetype="dashed") +
-  geom_vline(xintercept=max(d2[d2$consensus=="Increase",]$MAT), linetype="dashed") +
+  geom_vline(xintercept=min(d4[d4$consensus=="Decrease",]$MAT), linetype="dashed") +
+  geom_vline(xintercept=max(d4[d4$consensus=="Increase",]$MAT), linetype="dashed") +
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
     legend.justification=c(1,1), legend.position=c(.99,.99),
     #legend.position="top",
     panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
   xlim(c(-5.9,22.9)) +
-  guides(fill = guide_colorbar(barheight = unit(1.5, "cm")))
+  #guides(fill = guide_colorbar(barheight = unit(1.5, "cm"))) +
+  guides(color = guide_colorbar(barheight = unit(1.5, "cm"))) +
+  annotate("text", x=-Inf, y = Inf, label = "(a)", vjust=vj, hjust=hj, size=3,fontface=2)
 pts
 # Work on smoothed histogram----------------------------------------------------
 # File folder for climatology rasters
@@ -748,8 +757,8 @@ cover <- as.data.frame(pts4)
 # Split to color by confidence
 myCols = c("red","lightgray","blue")
 
-max<- max(d2[d2$consensus=="Increase",]$MAT)
-min <- min(d2[d2$consensus=="Decrease",]$MAT)
+max<- max(d4[d4$consensus=="Increase",]$MAT)
+min <- min(d4[d4$consensus=="Decrease",]$MAT)
 c2 <- cover %>% 
   mutate(cat=ifelse(pts4>max, "Decrease","Either")) %>%
   mutate(cat=ifelse(pts4<min, "Increase",cat))
@@ -757,8 +766,6 @@ c2 <- cover %>%
                       
 hist <-
 ggplot(data=c2, aes(x=pts4, fill=cat)) +
-  #geom_density(adjust=2,alpha = 0.1,color="grey") +
-  #geom_histogram(binwidth=.5) +
   geom_bar(aes(y = (..count..)/sum(..count..)), binwidth = .5) + 
   scale_fill_manual(values=myCols) +
   geom_vline(xintercept=min, linetype="dashed") +
@@ -767,7 +774,8 @@ ggplot(data=c2, aes(x=pts4, fill=cat)) +
   ylab("Proportion of Range") +
   xlim(c(-5.9,22.9)) +
   theme(legend.position="none",
-    panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+    panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
+  annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=vj, hjust=hj, size=3,fontface=2)
 hist
 
 # Save Plots
@@ -781,9 +789,9 @@ gp2$widths[2:3] <- maxWidth
 grid.arrange(arrangeGrob(gp1,gp2, ncol=1))
 
 # Save scatterplot and boxplot
-distrib <- grid.arrange(arrangeGrob(gp1,gp2, ncol=1, heights=c(72,80)))
-ggsave(paste(fpath, "vulnerability_rangehist.eps", sep=""), plot=distrib,
-       width = col1, height = 152, units = 'mm')
+distrib <- grid.arrange(arrangeGrob(gp1,gp2, ncol=1, heights=c(68,75), widths=col1))
+ggsave(paste(fpath, "vulnerability_rangehist.pdf", sep=""), plot=distrib,
+       width = col1, height = 143, units = 'mm')
 
 
 ################################################################################
@@ -799,19 +807,23 @@ m2 <- merged %>% group_by(site) %>% summarise_each(funs(mean)) %>%
 d3 <- merge(d2,m2, by="site", all=F) # d2 is just RCP8.5
 dim(d3)
 gg3 <- 
-  ggplot(data = d3, aes( x = Comp.1_rev, y = Comp.2, fill = conf2 )) + 
-  geom_point( size = 1,colour="black",pch=21) + 
-  scale_fill_gradient2(low="red", high="blue",
-                       name="Model\nAgreement\n",
-                       breaks=c(-20,0,20),labels=c(-20,0,20),
-                       limits=c(-20,20)) +
+  ggplot(data = d3, aes(x = Comp.1_rev, y = Comp.2)) + 
+  #geom_point(aes(fill = conf2), size = 1,colour="black",pch=21) + 
+ # scale_fill_gradient2(low="red", high="blue",
+                      # name="Model\nAgreement\n",
+                      # breaks=c(-20,0,20),labels=c(-20,0,20),
+                      # limits=c(-20,20)) +
+  geom_point(size=1, aes(color=conf2)) +
+  scale_color_gradient2(low="red", high="blue",
+                        name="Model\nAgreement\n",
+                        breaks=c(-20,0,20),labels=c(-20,0,20),
+                        limits=c(-20,20)) +
   xlab( 'PC1 : (Site Temperature)') +
   ylab( 'PC2 : (Precipitation Seasonality)') +
-  theme(
-    #legend.position="top",
-    legend.justification=c(1,1), legend.position=c(.99,.99),
+  theme(legend.justification=c(1,1), legend.position=c(.99,.99),
     panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
-  guides(fill = guide_colorbar(barheight = unit(1.5, "cm"))) +
+  guides(color = guide_colorbar(barheight = unit(1.5, "cm"))) +
+  #guides(fill = guide_colorbar(barheight = unit(1.5, "cm"))) +
   annotate("text", x=-Inf, y = Inf, label = "(a)", vjust=vj, hjust=hj, size=3,fontface=2) 
 
 # Code to override clipping
@@ -821,7 +833,7 @@ gg3 <-gt2
 
 # # Save Plot
 # gg3
-# ggsave(paste(fpath, "PCA_model_agreement_color.eps", sep=""), plot=gg3,
+# ggsave(paste(fpath, "PCA_model_agreement_color.pdf", sep=""), plot=gg3,
 #        width = col1, height = col1, units = 'mm')
 
 ################################################################################
@@ -836,13 +848,18 @@ md2 <- mapdat %>% group_by(site) %>%
 table(md2$conf2)
 
 agree <- 
-  ggplot(data=md2, aes(y=lat, x=lon,fill=conf2)) +
+  ggplot(data=md2, aes(y=lat, x=lon)) +
   geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="black", size=.1) +
-  geom_point( size = 1,colour="black",pch=21) + 
-  scale_fill_gradient2(low="red", high="blue",
-                       name="Model\nAgreement\n",
-                       breaks=c(-20,0,20),labels=c(-20,0,20),
-                       limits=c(-20,20)) +
+  # geom_point(aes(fill=conf2), size = 1,colour="black",pch=21) + 
+  # scale_fill_gradient2(low="red", high="blue",
+  #                      name="Model\nAgreement\n",
+  #                      breaks=c(-20,0,20),labels=c(-20,0,20),
+  #                      limits=c(-20,20)) +
+  geom_point(size=1, aes(color=conf2)) +
+  scale_color_gradient2(low="red", high="blue",
+                        name="Model\nAgreement\n",
+                        breaks=c(-20,0,20),labels=c(-20,0,20),
+                        limits=c(-20,20)) +
   ylab("Longitude") +
   xlab("Latitude") +
   coord_fixed(1.3) +
@@ -862,8 +879,40 @@ gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
 agree <-gt2
 
 # Save PCA and map as multi-panel fig.
-pcamap <- grid.arrange(gg3, agree, ncol=1, heights=c(col1,col1))
-ggsave(paste(fpath, "pca_map_results.eps", sep=""), plot=pcamap,
-       width = col1, height = 169, units = 'mm')
+pcamap <- grid.arrange(gg3, agree, ncol=1, heights=c(col1,col1), widths=col1)
+ggsave(paste(fpath, "pca_map_results.pdf", sep=""), plot=pcamap,
+       width = col1, height = col2, units = 'mm')
 
+################################################################################
+# Figure 2 for factsheet: just the map
+################################################################################
+map <- 
+  ggplot(data=md2, aes(y=lat, x=lon)) +
+  geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="black", size=.1) +
+  # geom_point(aes(fill=conf2), size = 1,colour="black",pch=21) + 
+  # scale_fill_gradient2(low="red", high="blue",
+  #                      name="Model\nAgreement\n",
+  #                      breaks=c(-20,0,20),labels=c(-20,0,20),
+  #                      limits=c(-20,20)) +
+  geom_point(size=1, aes(color=conf2)) +
+  scale_color_gradient2(low="red", high="blue",
+                        name="Model\nAgreement\n",
+                        breaks=c(-20,0,20),labels=c("Decrease","Uncertain","Increase"),
+                        limits=c(-20,20)) +
+  ylab("Longitude") +
+  xlab("Latitude") +
+  coord_fixed(1.3) +
+  theme(legend.position="right") +
+  theme(legend.spacing=unit(0, "cm"),
+    axis.line=element_blank(),axis.text.x=element_blank(),
+    axis.text.y=element_blank(),axis.ticks=element_blank(),
+    axis.title.x=element_blank(),
+    axis.title.y=element_blank(), panel.background=element_blank(),
+    panel.border=element_blank(),panel.grid.major=element_blank(),
+    panel.grid.minor=element_blank(),plot.background=element_blank()) +
+  guides(color = guide_colorbar(barheight = unit(2, "cm"))) 
+    
+map
+ggsave(paste(fpath, "factsheet_map.pdf", sep=""), plot=map,
+       width = 90, height = 70, units = 'mm')
 
