@@ -66,7 +66,7 @@ ggplot(data=a2, aes(x=var, fill=as.factor(mag))) +
 ################################################################################
 tempCol <- c('yellow1','orange2','orangered3')
 vj <- 1.3
-hj <- 1.3
+hj <- 1.05
 t <- merged %>% filter(var=="temp")
 DGVM <- 
   ggplot(data=t[t$model=="DGVM-full-400ppm",], aes(x=bio1/10,y=change)) +
@@ -104,7 +104,9 @@ CC <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," Max % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+  ylim(c(-22,22)) +
+  #annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(a) Spatial Correlations", vjust=vj, hjust=hj, size=4)
 
 AK <- 
   ggplot(data=t[t$model=="AK",], aes(x=bio1/10,y=change)) +
@@ -124,7 +126,8 @@ AK <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+  #annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=hj, size=4)
 
 DRS <- 
   ggplot(data=t[t$model=="DRS",], aes(x=bio1/10,y=change)) +
@@ -141,8 +144,9 @@ DRS <-
         plot.margin=unit(c(.1,.1,.1,.1), "cm"),
         axis.title.y = element_text(size = rel(1.3))) +
   xlab(expression("Mean Annual Temperature ("*~degree*"C)")) +
-  ylab(expression(paste(Delta," % Regen"))) +
-  annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
+  ylab(expression(paste(Delta," % Years with Regeneration"))) +
+  #annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(d) Seedling Survival", vjust=vj, hjust=hj, size=4)
 
 # make legend
 leg <-   ggplot(data=t[t$model=="AK",], aes(x=bio1/10,y=change)) +
@@ -178,6 +182,7 @@ gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
 gp3$widths[2:3] <- maxWidth
 gp4$widths[2:3] <- maxWidth
+quartz()
 temps <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2, 
                                           heights = unit(c(72,82), "mm")), ncol=1,
                       heights = unit(c(9,154), "mm"))
@@ -191,8 +196,8 @@ ggsave(paste(fpath, "temp_sensitivity.pdf", sep=""), plot=temps,
 ################################################################################
 pptCol <- c('darkgoldenrod4','dodgerblue','dodgerblue4')
 vj <- 1.3
-hj <- 1.3
-t <- merged %>% filter(var=="temp")
+hj <- 1.05
+t <- merged %>% filter(var=="ppt")
 DGVM <- 
   ggplot(data=t[t$model=="DGVM-full-400ppm",], aes(x=bio12,y=change)) +
   geom_point(aes(color=as.factor(mag)), size=.5) +
@@ -229,7 +234,9 @@ CC <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," Max % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+  ylim(c(-20,24)) +
+  #annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(a) Spatial Correlations", vjust=vj, hjust=hj, size=4)
 
 AK <- 
   ggplot(data=t[t$model=="AK",], aes(x=bio12,y=change)) +
@@ -249,7 +256,9 @@ AK <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+  ylim(c(-2,8)) +
+  #annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=hj, size=4)
 
 DRS <- 
   ggplot(data=t[t$model=="DRS",], aes(x=bio12,y=change)) +
@@ -266,8 +275,9 @@ DRS <-
         plot.margin=unit(c(.1,.1,.1,.1), "cm"),
         axis.title.y = element_text(size = rel(1.3))) +
   xlab("Mean Annual Precipitation (mm)") +
-  ylab(expression(paste(Delta," % Regen"))) +
-  annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
+  ylab(expression(paste(Delta," % Years with Regeneration"))) +
+  #annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(d) Seedling Survival", vjust=vj, hjust=hj, size=4)
 
 # make legend
 leg <-   ggplot(data=t[t$model=="AK",], aes(x=bio12,y=change)) +
@@ -320,7 +330,7 @@ m5 <- m4 %>% mutate(abschange=abs(change)) %>%
   mutate(var2=ifelse(var=="ppt", "Precipitation","Temperature"))
 head(m5)
 m5$mag <- as.factor(m5$mag)
-levs = c("+.2C","-10%","+10%","+20%","+2C","+4C")
+levs = c("+.2C ","-10% ","+10% ","+20% ","+2C ","+4C ")
 levels(m5$mag) <- levs
 
 # Set up separate data frame so can annotate individual facet
@@ -351,7 +361,9 @@ AK <-
         panel.border = element_blank(),
         axis.line = element_line(colour = "black", size=.1),
         strip.text.x = element_blank()) +
-  geom_text(data = ann_text,label = "(b) TC", hjust=hj, vjust=vj, size=3 )
+  ylim(c(-4.5,11)) +
+  #geom_text(data = ann_text,label = "(b) TC", hjust=hj, vjust=vj, size=3 )
+  geom_text(data=ann_text,label= "(b) Temporal Correlations", hjust=hj, vjust=vj, size=3)
 
 CC <- 
   ggplot(data=m5[m5$model=="randfor",], aes(x=mag, y=meanchange)) +
@@ -373,7 +385,9 @@ CC <-
         panel.border = element_blank(),
         axis.line = element_line(colour = "black", size=.1),
         strip.text.x = element_blank()) +
-  geom_text(data = ann_text,label = "(a) SC", hjust=hj, vjust=vj, size=3 )
+  ylim(c(-4.5,11)) +
+  #geom_text(data = ann_text,label = "(a) SC", hjust=hj, vjust=vj, size=3 )
+  geom_text(data = ann_text,label = "(a) Spatial Correlations", hjust=hj, vjust=vj, size=3 )
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM-full-400ppm",], aes(x=mag, y=meanchange)) +
@@ -393,6 +407,7 @@ KR <-
         panel.background = element_rect(fill="white"),
         panel.border = element_blank(),
         axis.line = element_line(colour = "black", size=.1)) +
+  ylim(c(-4.5,11)) +
   geom_text(data = ann_text,label = "(c) DGVM", hjust=hj, vjust=vj, size=3 )
 
 DRS <- 
@@ -402,7 +417,7 @@ DRS <-
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
-  ylab(expression(paste(Delta," % Regeneration"))) +
+  ylab(expression(paste(Delta," % Years with Regeneration"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
@@ -413,7 +428,8 @@ DRS <-
         panel.background = element_rect(fill="white"),
         panel.border = element_blank(),
         axis.line = element_line(colour = "black", size=.1)) +
-   geom_text(data = ann_text,label = "(d) SS", hjust=hj, vjust=vj, size=3 )
+   #geom_text(data = ann_text,label = "(d) SS", hjust=hj, vjust=vj, size=3 )
+  geom_text(data = ann_text,label = "(d) Seedling Survival", hjust=hj, vjust=vj, size=3 )
 
 
 # Save Plot
