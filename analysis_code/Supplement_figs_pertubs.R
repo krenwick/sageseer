@@ -183,7 +183,7 @@ temps <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
                       heights = unit(c(9,154), "mm"))
 
 #eps doesn't support transparency.
-ggsave(paste(fpath, "temp_sensitivity.eps", sep=""), plot=temps, 
+ggsave(paste(fpath, "temp_sensitivity.pdf", sep=""), plot=temps, 
        width = col2, height = col2, units = 'mm')
 
 ################################################################################
@@ -304,7 +304,7 @@ ppts <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
                       heights = unit(c(9,154), "mm"))
 
 #eps doesn't support transparency.
-ggsave(paste(fpath, "precip_sensitivity.eps", sep=""), plot=ppts, 
+ggsave(paste(fpath, "precip_sensitivity.pdf", sep=""), plot=ppts, 
        width = col2, height = col2, units = 'mm')
 
 ################################################################################
@@ -338,7 +338,7 @@ AK <-
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
-  ylab(expression(paste(Delta," % Regen"))) +
+  ylab(expression(paste(Delta," % Cover"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none",
@@ -360,7 +360,7 @@ CC <-
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
-  ylab(expression(paste(Delta," % Regen"))) +
+  ylab(expression(paste(Delta," % Max Cover"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none",
@@ -382,7 +382,7 @@ KR <-
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
-  ylab(expression(paste(Delta," % Regen"))) +
+  ylab(expression(paste(Delta," % Cover"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
@@ -402,7 +402,7 @@ DRS <-
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
-  ylab(expression(paste(Delta," % Regen"))) +
+  ylab(expression(paste(Delta," % Regeneration"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
@@ -431,6 +431,6 @@ gp4$widths[2:3] <- maxWidth
 # render and save plot
 pmagchange <-grid.arrange(gp1,gp2,gp3,gp4, ncol=2,
                         heights = unit(c(74,80), "mm"))
-ggsave(paste(fpath, "perturb_magchange_bw.eps", sep=""), plot=pmagchange, 
+ggsave(paste(fpath, "perturb_magchange_bw.pdf", sep=""), plot=pmagchange, 
        width = col2, height = col2, units = 'mm')
 
