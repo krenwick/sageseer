@@ -356,17 +356,17 @@ round(with(dat_agree_NRCS, table(Maestas_RR = RR_class_name, consensus) / sw_RR_
 # Moderate     0.01     0.97   0.02
 
 # But what is the sample size?
-sw_RR_freq
-
-High         0.01     0.98   0.02
-Low          0.17     0.70   0.12
-Moderate     0.02     0.97   0.02
+# sw_RR_freq
+# 
+# High         0.01     0.98   0.02
+# Low          0.17     0.70   0.12
+# Moderate     0.02     0.97   0.02
 
 #####################################################
 
 myCols = c("red3","lightgray","dodgerblue3")
 
-High   <- c(      0.01,  0,   .98)
+High   <- c(      0.01,  0.02,   .98)
 Low   <-  c(    0.17,  0.12,   0.7)
 Moderate  <- c(    0.02,  0.02,   0.97)
 
@@ -375,7 +375,7 @@ Nhigh <-6; Nlow <- 250; Nmod <- 420
 png("R&R-barplot.png",height=5,width=5,res=400,units="in")
 par(tcl=-0.1,mgp=c(2,0.5,0),mar=c(3,4,1,7),xpd=TRUE,cex.lab=1.2)
 xvals=barplot(cbind(Low,Moderate,High),col=myCols,xlab="Resilience Class",
-              ylab="Proportion of sites x scenarios")
+              ylab="Proportion of Sites")
 text(xvals[1],0.5,paste0("n=",Nlow),col="white",cex=1.2)
 text(xvals[2],0.5,paste0("n=",Nmod),col="white",cex=1.2)
 text(xvals[3],0.5,paste0("n=",Nhigh),col="white",cex=1.2)
