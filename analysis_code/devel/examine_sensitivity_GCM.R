@@ -107,9 +107,10 @@ ggplot(data=m5, aes(x=scenario, y=meanchange, fill=GCM)) +
 # Try boxplot instead of bar chart- show full distribution (NOPE! bar is best)
 m5 <- m4 %>% mutate(abschange=abs(change)) %>%
   mutate(direction=ifelse(change>0,"increase","decrease")) 
-ggplot(data=m5, aes(x=scenario, y=change, fill=GCM)) +
+ggplot(data=m5[m5$direction=="increase",], aes(x=scenario, y=change, fill=GCM)) +
   #geom_boxplot(position=position_dodge(width=0.9), notch=T) +
-  geom_violin() +
+  geom_boxplot() +
+  geom_boxplot(data=m5[m5$direction=="decrease",]) +
   geom_hline(yintercept=0) +
   #geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   scale_fill_manual(values=cbPalette, name="GCM") +
