@@ -134,7 +134,8 @@ p1 <- ggplot(data=out2, aes(y=y, x=x, color=type)) +
   geom_point(data=out2[out2$LT_data == 1, ], color="black", size=.5) +
   geom_point(data=out2[out2$extra == 1, ], color="gray48", size=.5) +
   geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="gray30", size=.3) +
-  coord_fixed(1.3) +
+  #coord_fixed(1.3) +
+  coord_map("albers", lat0=39, lat1=45) +
   scale_color_manual(values=c("gray48", "black","gray87"), 
     name="", breaks=c("presence", "LT","extra"),
     labels=c("Presence","Long-term data", "Extra site")) +
@@ -200,7 +201,8 @@ DGVM <-
         axis.title.y = element_text(size = rel(1.3))) +
   xlab(expression("Mean Annual Temperature ("*~degree*"C)")) +
   ylab(expression(paste(Delta," % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=1.1, size=4)
+  #annotate("text", x=Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=4)
 
 CC <- 
   ggplot(data=rcp85[rcp85$model=="randfor",], aes(x=bio1/10,y=change)) +
@@ -220,7 +222,9 @@ CC <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," Max % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+  scale_y_continuous(limits=c(-35,35)) +
+  annotate("text", x=Inf, y = Inf, label = "(a) Spatial Correlations", vjust=vj, hjust=1.1, size=4)
+  #annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
 
 AK <- 
   ggplot(data=rcp85[rcp85$model=="AK",], aes(x=bio1/10,y=change)) +
@@ -240,7 +244,8 @@ AK <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=1.1, size=4)
+  #annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
 
 DRS <- 
   ggplot(data=rcp85[rcp85$model=="GISSM_v1.6.3",], aes(x=bio1/10,y=change)) +
@@ -257,8 +262,9 @@ DRS <-
         plot.margin=unit(c(.1,.1,.1,.1), "cm"),
         axis.title.y = element_text(size = rel(1.3))) +
   xlab(expression("Mean Annual Temperature ("*~degree*"C)")) +
-  ylab(expression(paste(Delta," % Regen"))) +
-  annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
+  ylab(expression(paste(Delta," % Years with Regeneration"))) +
+  annotate("text", x=Inf, y = Inf, label = "(d) Seedling Survival", vjust=vj, hjust=1.1, size=4)
+  #annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
 
 # make legend
 leg <-   ggplot(data=rcp85[rcp85$model=="AK",], aes(x=bio1/10,y=change)) +
@@ -366,7 +372,8 @@ DGVM <-
         axis.title.y = element_text(size = rel(1.3))) +
   xlab("Mean Annual Precipitation (mm)") +
   ylab(expression(paste(Delta," % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=4)
+  #annotate("text", x=Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=-Inf, y = Inf, label = "(c) DGVM", vjust=vj, hjust=-.05, size=4)
 
 CC <- 
   ggplot(data=rcp85[rcp85$model=="randfor",], aes(x=bio12,y=change)) +
@@ -386,7 +393,9 @@ CC <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," Max % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+  scale_y_continuous(limits=c(-35,35)) +
+  #annotate("text", x=Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=-Inf, y=Inf, label= "(a) Spatial Correlations", vjust=vj, hjust=-.05, size=4)
 
 AK <- 
   ggplot(data=rcp85[rcp85$model=="AK",], aes(x=bio12,y=change)) +
@@ -406,7 +415,8 @@ AK <-
         axis.text.x=element_blank()) +
   xlab("MAT") +
   ylab(expression(paste(Delta," % Cover"))) +
-  annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+  #annotate("text", x=Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=-Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=-.05, size=4)
 
 DRS <- 
   ggplot(data=rcp85[rcp85$model=="GISSM_v1.6.3",], aes(x=bio12,y=change)) +
@@ -423,8 +433,9 @@ DRS <-
         plot.margin=unit(c(.1,.1,.1,.1), "cm"),
         axis.title.y = element_text(size = rel(1.3))) +
   xlab("Mean Annual Precipitation (mm)") +
-  ylab(expression(paste(Delta," % Regen"))) +
-  annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
+  ylab(expression(paste(Delta," % Years with Regeneration"))) +
+  #annotate("text", x=Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=4)
+  annotate("text", x=-Inf, y = Inf, label = "(d) Seedling Survival", vjust=vj, hjust=-.05, size=4)
 
 # make legend
 leg <-   ggplot(data=rcp85[rcp85$model=="AK",], aes(x=bio12,y=change)) +
@@ -493,8 +504,8 @@ AK <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
-AK
+  #annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
+  annotate("text", x=-Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=hj, size=3)
 
 CC <- 
   ggplot(data=m5[m5$model=="randfor",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -509,7 +520,8 @@ CC <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
+  #annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
+  annotate("text", x=-Inf, y = Inf, label = "(a) Spatial Correlations", vjust=vj, hjust=hj, size=3)
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -531,11 +543,12 @@ DRS <-
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   scale_fill_manual(values=yelred, name="GCM") +
   xlab("GCM") +
-  ylab(expression(paste(Delta," % Regen"))) +
+  ylab(expression(paste(Delta," % Years with Regeneration"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=3)
+  #annotate("text", x=-Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=3)
+  annotate("text", x=-Inf, y = Inf, label = "(d) Seedling Survival", vjust=vj, hjust=hj, size=3)
 
 # make legend
 leg <- ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -591,7 +604,8 @@ AK <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
+  #annotate("text", x=-Inf, y = Inf, label = "(b) TC", vjust=vj, hjust=hj, size=3)
+  annotate("text", x=-Inf, y = Inf, label = "(b) Temporal Correlations", vjust=vj, hjust=hj, size=3)
 
 CC <- 
   ggplot(data=m5[m5$model=="randfor",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -605,7 +619,8 @@ CC <-
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none")+
-  annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
+  #annotate("text", x=-Inf, y = Inf, label = "(a) SC", vjust=vj, hjust=hj, size=3)
+  annotate("text", x=-Inf, y = Inf, label = "(a) Spatial Correlations", vjust=vj, hjust=hj, size=3)
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -627,11 +642,12 @@ DRS <-
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   scale_fill_manual(values=bw, name="GCM") +
   xlab("GCM") +
-  ylab(expression(paste(Delta," % Regen"))) +
+  ylab(expression(paste(Delta," % Years with Regeneration"))) +
   theme(axis.title.x=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.position="none") +
-  annotate("text", x=-Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=3)
+  #annotate("text", x=-Inf, y = Inf, label = "(d) SS", vjust=vj, hjust=hj, size=3)
+  annotate("text", x=-Inf, y = Inf, label = "(d) Seedling Survival", vjust=vj, hjust=hj, size=3)
 
 # make legend
 leg <- ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
@@ -675,28 +691,29 @@ ggsave(paste(fpath, "GCM_magchange_bw.pdf", sep=""), plot=GCM_bar_bw,
 ################################################################################
 # Figure xx:
 # Boxplot showing mean climate by response category (RCP8.5)
-################################################################################
-d4 <- merged %>%
-  filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
-  filter(scenario=="rcp85") %>% #exclude RCP4.5 output
-  group_by(site) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0), MAT=mean(bio1)/10) %>%
-  mutate(conf2=n.increase-n.decrease) %>%
-  mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
-  mutate(rel_conf_cat=conf_cat/n) %>%
-  mutate(consensus=ifelse(conf_cat==n.increase,"Increase","Decrease")) %>%
-  mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"Unsure",consensus)) %>%
-  filter(n==max(n))
-dim(d4)
-d4$consensus <- factor(d4$consensus, levels=c("Decrease","Unsure","Increase"))
-
-boxplot <- ggplot(data=d4, aes(x=consensus,y=MAT, group=consensus)) +
-  geom_boxplot(notch=T) +
-  coord_flip() +
-  xlab("Change in Performance") +
-  ylab(expression("Mean Annual Temperature ("*~degree*"C)")) 
-ggsave(paste(fpath, "consensus_MAT_boxplot_bw.pdf", sep=""), plot=boxplot,
-       width = col1, height = col1*.7, units = 'mm')
+# (replaced by scatterplot + histogram figure)
+# ###############################################################################
+# d4 <- merged %>%
+#   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
+#   filter(scenario=="rcp85") %>% #exclude RCP4.5 output
+#   group_by(site) %>%
+#   summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0), MAT=mean(bio1)/10) %>%
+#   mutate(conf2=n.increase-n.decrease) %>%
+#   mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
+#   mutate(rel_conf_cat=conf_cat/n) %>%
+#   mutate(consensus=ifelse(conf_cat==n.increase,"Increase","Decrease")) %>%
+#   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"Unsure",consensus)) %>%
+#   filter(n==max(n))
+# dim(d4)
+# d4$consensus <- factor(d4$consensus, levels=c("Decrease","Unsure","Increase"))
+# 
+# boxplot <- ggplot(data=d4, aes(x=consensus,y=MAT, group=consensus)) +
+#   geom_boxplot(notch=T) +
+#   coord_flip() +
+#   xlab("Change in Performance") +
+#   ylab(expression("Mean Annual Temperature ("*~degree*"C)")) 
+# ggsave(paste(fpath, "consensus_MAT_boxplot_bw.pdf", sep=""), plot=boxplot,
+#        width = col1, height = col1*.7, units = 'mm')
 
 
 ################################################################################
@@ -714,12 +731,12 @@ pts <- ggplot(data=d4, aes(x=MAT, y=(conf2))) +
   #                      limits=c(-20,20)) +
   geom_point(aes(color=conf2)) +
   scale_color_gradient2(low="red", high="blue",
-                       name="Model\nAgreement\n",
+                       name="Vulnerability\nScore\n",
                        breaks=c(-20,0,20),labels=c(-20,0,20),
                        limits=c(-20,20)) +
   geom_hline(yintercept=0) +
   xlab("Mean Annual Temperature") +
-  ylab("Vulnerability Index") +
+  ylab("Vulnerability Score") +
   geom_vline(xintercept=min(d4[d4$consensus=="Decrease",]$MAT), linetype="dashed") +
   geom_vline(xintercept=max(d4[d4$consensus=="Increase",]$MAT), linetype="dashed") +
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
@@ -815,7 +832,7 @@ gg3 <-
                       # limits=c(-20,20)) +
   geom_point(size=1, aes(color=conf2)) +
   scale_color_gradient2(low="red", high="blue",
-                        name="Model\nAgreement\n",
+                        name="Vulnerability\nScore\n",
                         breaks=c(-20,0,20),labels=c(-20,0,20),
                         limits=c(-20,20)) +
   xlab( 'PC1 : (Site Temperature)') +
@@ -850,19 +867,15 @@ table(md2$conf2)
 agree <- 
   ggplot(data=md2, aes(y=lat, x=lon)) +
   geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="black", size=.1) +
-  # geom_point(aes(fill=conf2), size = 1,colour="black",pch=21) + 
-  # scale_fill_gradient2(low="red", high="blue",
-  #                      name="Model\nAgreement\n",
-  #                      breaks=c(-20,0,20),labels=c(-20,0,20),
-  #                      limits=c(-20,20)) +
   geom_point(size=1, aes(color=conf2)) +
   scale_color_gradient2(low="red", high="blue",
-                        name="Model\nAgreement\n",
+                        name="Vulnerability\nScore\n",
                         breaks=c(-20,0,20),labels=c(-20,0,20),
                         limits=c(-20,20)) +
   ylab("Longitude") +
   xlab("Latitude") +
-  coord_fixed(1.3) +
+  coord_map("albers", lat0=39, lat1=45) +
+  #coord_fixed(1.3) +
   theme(legend.position="none") +
   theme(#legend.margin=unit(0, "cm"),
         axis.line=element_blank(),axis.text.x=element_blank(),
@@ -872,7 +885,7 @@ agree <-
         panel.border=element_blank(),panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),plot.background=element_blank()) +
   annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=-.2, size=3,fontface=2) 
-
+agree
 # Code to override clipping
 gt2 <- ggplot_gtable(ggplot_build(agree))
 gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
@@ -901,7 +914,7 @@ map <-
                         limits=c(-20,20)) +
   ylab("Longitude") +
   xlab("Latitude") +
-  coord_fixed(1.3) +
+  coord_map("albers", lat0=39, lat1=45) +
   theme(legend.position="right") +
   theme(legend.spacing=unit(0, "cm"),
     axis.line=element_blank(),axis.text.x=element_blank(),
