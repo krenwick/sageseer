@@ -1,5 +1,6 @@
 ################################################################################
-# Make figures for sagebrush manuscript
+# Make figures for sagebrush model comparison manuscript
+# Creates all figs using data from GCM runs
 ################################################################################
 rm(list=ls())
 library(tidyverse); theme_set(theme_bw(base_size=9)) # sized for print
@@ -11,8 +12,12 @@ library(grid)
 # paths to data and figure folders: Must use full path for readOGR to work
 dpath <- "/Users/poulterlab1/version-control/sageseer/"
 fpath <- "/Users/poulterlab1/version-control/sageseer/figures/"
+# File folder for climatology rasters (need for fig. 5b)
+ndir <- "~/Box Sync/sageseer/ClimateData/PRISM_tmean_30yr_normal_800mM2_annual_asc/"
+# File with cover data from sagebrush climate console
+cmappath <- "/Users/poulterlab1/Documents/GIS_baselayers/Sagebrush_MW5k_1km_latlon.tif"
 
-#----------------------------------------
+#-------------------------------------------------------------------------------
 # Journal Specifications for figure size
 # Global Change Bio:
 col1 <- 80 # 1 column width = 80 mm
@@ -25,7 +30,7 @@ cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2")
 # Load and clean data for all figures
 ################################################################################
 # Pull in data and manipulat
-# Caroline's list of bad points:
+# Caroline's list of bad points (no documentation):
 car <- read.csv(paste(dpath, "data/AZ_pts_no_source_data.csv", sep=""))
 carlat <- car$latitude
 carlon <- car$longitude
@@ -33,7 +38,7 @@ carlon <- car$longitude
 # data from Andy's PCA script (original full list of presence points)
 dat <- read.csv(paste(dpath, "data/pcapts.csv", sep=""))
 
-# Eliminate points on Caroline's "bad" list (WTH don't coords match??)
+# Eliminate points on Caroline's "bad" list (coord issues from regridding)
 dat$x2 <- round(dat$x,1)
 dat$y2 <- round(dat$y,1)
 carlat<- round(carlat,1)
@@ -42,7 +47,7 @@ dat2 <- dat[!(dat$y2 %in% carlat==TRUE & dat$x2 %in% carlon==TRUE),]
 dat2$Comp.1 <- dat2$Comp.1*-1
 out<- dat2
 
-# eliminate dakota pts
+# eliminate dakota pts (not used in analysis b/c outside study area)
 max(out$x)
 min(out$x)
 outb <- filter(out, x<=-103.7)
@@ -85,7 +90,7 @@ d2$consensus <- factor(d2$consensus, levels=c("Decrease","Unsure","Increase"))
 # Figure 1:
 # Map sagebrush cover + presence points + focal points
 ################################################################################
-# 1. Plot PCA with grid
+# 1a. Plot PCA with grid
 
 # shortcuts for column names 
 ll <- c('x', 'y') # lat long 
@@ -120,7 +125,7 @@ p2 <-gt
 plot(p2)
 
 ###############################
-# 2. Create map working with same data as PCA
+# 1b. Create map working with same data as PCA
 # Wrangle data into tidy frame
 out2 <- out %>% 
   mutate(type=ifelse(LT_data==1, "LT", "fix")) %>%
@@ -145,7 +150,6 @@ p1 <- ggplot(data=out2, aes(y=y, x=x, color=type)) +
   annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=2, size=3,fontface=2) +
   xlab("Longitude") +
   ylab("Latitude") 
-p1
 
 # Code to override clipping
 gt2 <- ggplot_gtable(ggplot_build(p1))
@@ -175,10 +179,10 @@ ggsave(paste(fpath, "PCA_map.pdf", sep=""), plot=both, width = col1, height = 17
        units = 'mm')
 
 ################################################################################
-# Figure xx:
+# Figure 3:
 # Scatterplot along MAT gradient, various GCMS, RCP8.5
 ################################################################################
-vj <- 1.3
+vj <- 1.3 # sets distance for panel title placement
 hj <- 1.3
 
 # Color Version:---------------------------------------------
@@ -291,7 +295,6 @@ gp1<- ggplot_gtable(ggplot_build(CC))
 gp2<- ggplot_gtable(ggplot_build(AK))
 gp3<- ggplot_gtable(ggplot_build(DGVM))
 gp4<- ggplot_gtable(ggplot_build(DRS))
-#gprects<- ggplot_gtable(ggplot_build(prects))
 maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3], gp3$widths[2:3], gp4$widths[2:3])
 gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
@@ -302,59 +305,12 @@ both2 <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
                       heights = unit(c(72,82), "mm")), ncol=1,
                       heights = unit(c(9,154), "mm"))
 
-#eps doesn't support transparency.
+#eps doesn't support transparency, use pdf for line with CI.
 ggsave(paste(fpath, "change_GCM_MAT_rcp85_color_line.pdf", sep=""), plot=both2,
        width = col2, height = col2, units = 'mm')
 
-# Black and White for print:----------------------------------------------------
-# Focus on the model near the center (CESM1-CAM5):
-CESM <- filter(merged, GCM=="CESM1-CAM5")
-plot_raw_change <- function(data,  modeln, ylab,title) {
-  d <- data %>% dplyr::filter(model==modeln)
-  plot <- ggplot(data=d, aes(x=bio1/10,y=change)) +
-    geom_point(aes(color=scenario), size=.3) +
-    scale_color_manual(values=c("grey","black"), name="Emissions\nScenario") +
-    geom_hline(yintercept=0, linetype="dashed") +
-    stat_smooth(aes(fill=scenario, color=scenario),method = "lm", size=.5) +
-    scale_fill_manual(values=c("grey","black"), name="Emissions\nScenario") +
-    ylab("Change in Response") +
-    theme(legend.position="none", legend.title=element_blank(),
-          panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-          legend.text.align = 0,
-          plot.margin=unit(c(.1,.1,.1,.1), "cm"),
-          axis.title.y = element_text(size = rel(1))) +
-    xlab("MAT") +
-    #scale_x_continuous(limits=c(-1.9,20.8)) +
-    ylab(ylab) +
-    annotate("text", x=Inf, y = Inf, label = title, vjust=1.3, hjust=1.3, size=4)
-  return(plot)
-}
-DGVM <- plot_raw_change(CESM,modeln="DGVM", ylab=expression(paste(Delta," % Cover")), title="DVM")
-DGVM
-CC <- plot_raw_change(CESM,modeln="randfor", ylab=expression(paste(Delta," Max % Cover")), title="SC")
-AK <- plot_raw_change(CESM,modeln="AK", ylab=expression(paste(Delta," % Cover")), title="TC")
-DRS <- plot_raw_change(CESM,modeln="GISSM_v1.6.3", ylab=expression(paste(Delta," % Regen")), title="SS")
-
-# make legend
-leg <- plot_raw_change(CESM,modeln="AK", ylab="", title="TC")
-leg2 <- leg + theme(legend.position="top")
-get_legend<-function(myggplot){
-  tmp <- ggplot_gtable(ggplot_build(myggplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
-  legend <- tmp$grobs[[leg]]
-  return(legend)
-}
-legend <- get_legend(leg2)
-
-# Save Plot
-bwtemp <- grid.arrange(legend, arrangeGrob(CC,AK,DGVM,DRS, ncol=2), ncol=1,
-                      heights = unit(c(9,160), "mm"))
-ggsave(paste(fpath, "MAT_axis_CESM_bw.pdf", sep=""), plot=bwtemp, width = col2, height = 169, 
-       units = 'mm')
-
 ################################################################################
-# Figure xx (supplemental 3?)
-# Scatterplot along precip gradient, various GCMS, RCP8.5
+# Figure S4: Scatterplot along precip gradient, various GCMS, RCP8.5
 ################################################################################
 # Color Version:---------------------------------------------
 rcp85 <- merged %>% filter(scenario=="rcp85") %>%
@@ -463,7 +419,6 @@ gp1<- ggplot_gtable(ggplot_build(CC))
 gp2<- ggplot_gtable(ggplot_build(AK))
 gp3<- ggplot_gtable(ggplot_build(DGVM))
 gp4<- ggplot_gtable(ggplot_build(DRS))
-#gprects<- ggplot_gtable(ggplot_build(prects))
 maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3], gp3$widths[2:3], gp4$widths[2:3])
 gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
@@ -476,7 +431,7 @@ changepre <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2,
 ggsave(paste(fpath, "change_GCM_rcp85_pptgradient.pdf", sep=""), plot=changepre, 
        width = col2, height = 169, units = 'mm')
 ################################################################################
-# Figure xx:
+# Figure 4:
 # Bar chart showing variation between GCMs and models
 ################################################################################
 # Manipulate data:
@@ -491,8 +446,8 @@ m5 <- m4 %>% mutate(abschange=abs(change)) %>%
 m5$GCM <- factor(m5$GCM, levels = c("GISS-E2-H-CC","MPI-ESM-LR","CCSM4","CESM1-CAM5","HadGEM2-AO"))
 
 # Make b/w-friendly scale for GCMs:
-yelred <- c("#ffffb2","#fecc5c","#fd8d3c","#f03b20","#bd0026")
-bw <- c('#f7f7f7','#cccccc','#969696','#636363','#252525')
+yelred <- c("#ffffb2","#fecc5c","#fd8d3c","#f03b20","#bd0026") # for online
+bw <- c('#f7f7f7','#cccccc','#969696','#636363','#252525') # for print
 
 # Determine appropriate ylims for cover models
 summary(m5[m5$model!="GISSM_v1.6.3",])
@@ -585,7 +540,6 @@ gp1<- ggplot_gtable(ggplot_build(CC))
 gp2<- ggplot_gtable(ggplot_build(AK))
 gp3<- ggplot_gtable(ggplot_build(KR))
 gp4<- ggplot_gtable(ggplot_build(DRS))
-#gprects<- ggplot_gtable(ggplot_build(prects))
 maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3], gp3$widths[2:3], gp4$widths[2:3])
 gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
@@ -691,7 +645,6 @@ gp1<- ggplot_gtable(ggplot_build(CC))
 gp2<- ggplot_gtable(ggplot_build(AK))
 gp3<- ggplot_gtable(ggplot_build(KR))
 gp4<- ggplot_gtable(ggplot_build(DRS))
-#gprects<- ggplot_gtable(ggplot_build(prects))
 maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3], gp3$widths[2:3], gp4$widths[2:3])
 gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
@@ -707,46 +660,13 @@ ggsave(paste(fpath, "GCM_magchange_bw.pdf", sep=""), plot=GCM_bar_bw,
        width = col2, height = col2, units = 'mm')
 
 ################################################################################
-# Figure xx:
-# Boxplot showing mean climate by response category (RCP8.5)
-# (replaced by scatterplot + histogram figure)
-# ###############################################################################
-# d4 <- merged %>%
-#   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
-#   filter(scenario=="rcp85") %>% #exclude RCP4.5 output
-#   group_by(site) %>%
-#   summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0), MAT=mean(bio1)/10) %>%
-#   mutate(conf2=n.increase-n.decrease) %>%
-#   mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
-#   mutate(rel_conf_cat=conf_cat/n) %>%
-#   mutate(consensus=ifelse(conf_cat==n.increase,"Increase","Decrease")) %>%
-#   mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"Unsure",consensus)) %>%
-#   filter(n==max(n))
-# dim(d4)
-# d4$consensus <- factor(d4$consensus, levels=c("Decrease","Unsure","Increase"))
-# 
-# boxplot <- ggplot(data=d4, aes(x=consensus,y=MAT, group=consensus)) +
-#   geom_boxplot(notch=T) +
-#   coord_flip() +
-#   xlab("Change in Performance") +
-#   ylab(expression("Mean Annual Temperature ("*~degree*"C)")) 
-# ggsave(paste(fpath, "consensus_MAT_boxplot_bw.pdf", sep=""), plot=boxplot,
-#        width = col1, height = col1*.7, units = 'mm')
-
-
-################################################################################
-# Plot scatterplot of consensus categories along MAT gradient
+# Fig. 5: Plot scatterplot of consensus categories along MAT gradient
 # Add in smoothed histogram
 ################################################################################
 vj <- 1.5 # vertical adjustment for panel label, pos moves down
 hj <- -.1 # horizotal placement of panel label, neg moves right, pos left
 
 pts <- ggplot(data=d4, aes(x=MAT, y=(conf2))) +
-  # geom_point(aes(fill=conf2), color="black", pch=21) +
-  # scale_fill_gradient2(low="red", high="blue",
-  #                      name="Model\nAgreement\n",
-  #                      breaks=c(-20,0,20),labels=c(-20,0,20),
-  #                      limits=c(-20,20)) +
   geom_point(aes(color=conf2)) +
   scale_color_gradient2(low="red", high="blue",
                        name="Vulnerability\nScore\n",
@@ -762,27 +682,22 @@ pts <- ggplot(data=d4, aes(x=MAT, y=(conf2))) +
     #legend.position="top",
     panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
   xlim(c(-5.9,22.9)) +
-  #guides(fill = guide_colorbar(barheight = unit(1.5, "cm"))) +
   guides(color = guide_colorbar(barheight = unit(1.5, "cm"))) +
   annotate("text", x=-Inf, y = Inf, label = "(a)", vjust=vj, hjust=hj, size=3,fontface=2)
-pts
-# Work on smoothed histogram----------------------------------------------------
-# File folder for climatology rasters
-ndir <- "~/Box Sync/sageseer/ClimateData/PRISM_tmean_30yr_normal_800mM2_annual_asc/"
 
+# Work on smoothed histogram----------------------------------------------------
 library(raster)
+
 # Read in PRISM climatology rasters
 MAT <- raster(paste(ndir, "MAT_crop.tif", sep=""))
 
 # Pull in cover map from the climate console
-cmap <- raster("/Users/poulterlab1/Documents/GIS_baselayers/Sagebrush_MW5k_1km_latlon.tif")
+cmap <- raster(cmappath)
 points <- rasterToPoints(cmap)
 
 # Convert to data frame and filter out zeros
 pts2 <- data.frame(points)
 pts3 <- pts2[pts2$Sagebrush_MW5k_1km_latlon>0,]
-dim(pts2)
-dim(pts3)
 
 # Extract MAT data
 pts4 <- extract(MAT,pts3[,1:2])
@@ -798,7 +713,6 @@ c2 <- cover %>%
   mutate(cat=ifelse(pts4>max, "Decrease","Either")) %>%
   mutate(cat=ifelse(pts4<min, "Increase",cat))
            
-                      
 hist <-
 ggplot(data=c2, aes(x=pts4, fill=cat)) +
   geom_bar(aes(y = (..count..)/sum(..count..)), binwidth = .5) + 
@@ -811,13 +725,11 @@ ggplot(data=c2, aes(x=pts4, fill=cat)) +
   theme(legend.position="none",
     panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
   annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=vj, hjust=hj, size=3,fontface=2)
-hist
 
 # Save Plots
 # first, fix annoying issue with axes not lining up
 gp1<- ggplot_gtable(ggplot_build(pts))
 gp2<- ggplot_gtable(ggplot_build(hist))
-#gprects<- ggplot_gtable(ggplot_build(prects))
 maxWidth = unit.pmax(gp1$widths[2:3], gp2$widths[2:3])
 gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
@@ -828,9 +740,8 @@ distrib <- grid.arrange(arrangeGrob(gp1,gp2, ncol=1, heights=c(68,75), widths=co
 ggsave(paste(fpath, "vulnerability_rangehist.pdf", sep=""), plot=distrib,
        width = col1, height = 143, units = 'mm')
 
-
 ################################################################################
-# Plot the change/confidence on Andy's PCA axes (RCP8.5)
+# Fig. 5: Plot the change/confidence on Andy's PCA axes (RCP8.5)
 ################################################################################
 vj <- 1.3 # vertical adjustment for panel label, pos moves down
 hj <- 2.1 # horizotal placement of panel label, neg moves right, pos left
@@ -866,13 +777,8 @@ gt2 <- ggplot_gtable(ggplot_build(gg3))
 gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
 gg3 <-gt2
 
-# # Save Plot
-# gg3
-# ggsave(paste(fpath, "PCA_model_agreement_color.pdf", sep=""), plot=gg3,
-#        width = col1, height = col1, units = 'mm')
-
 ################################################################################
-# Make map showing change/confidence (RCP8.5)
+# Make map showing change/confidence (panel b) (RCP8.5)
 ################################################################################
 m6 <- merged %>% group_by(site) %>%
   summarise_each(funs(mean)) %>%
@@ -903,7 +809,7 @@ agree <-
         panel.border=element_blank(),panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),plot.background=element_blank()) +
   annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=-.2, size=3,fontface=2) 
-agree
+
 # Code to override clipping
 gt2 <- ggplot_gtable(ggplot_build(agree))
 gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
