@@ -269,10 +269,13 @@ DRS <-
 # make legend
 leg <-   ggplot(data=rcp85[rcp85$model=="AK",], aes(x=bio1/10,y=change)) +
   geom_point(aes(color=GCM), size=.5) +
-  scale_color_manual(values=cbPalette, name="GCM") +
+  scale_color_manual(values=cbPalette, name="GCM",
+      labels=c("CCSM4 ","CESM1-CAM5 ","GISS-E2-H-CC  ","HadGEM2-AO ","MPI-ESM-LR")) +
   geom_hline(yintercept=0, linetype="dashed") +
   stat_smooth(aes(fill=GCM, color=GCM),method = "lm") +
-  scale_fill_manual(values=cbPalette, name="GCM") 
+  scale_fill_manual(values=cbPalette, name="GCM",
+      labels=c("CCSM4 ","CESM1-CAM5 ","GISS-E2-H-CC  ","HadGEM2-AO ","MPI-ESM-LR")) +
+  theme(legend.title = element_blank()) 
 leg2 <- leg + theme(legend.position="top")
 get_legend<-function(myggplot){
   tmp <- ggplot_gtable(ggplot_build(myggplot))
@@ -294,6 +297,7 @@ gp1$widths[2:3] <- maxWidth
 gp2$widths[2:3] <- maxWidth
 gp3$widths[2:3] <- maxWidth
 gp4$widths[2:3] <- maxWidth
+quartz() # deal with RStudio plot crash issue that sometimes happens
 both2 <- grid.arrange(legend, arrangeGrob(gp1,gp2,gp3,gp4, ncol=2, 
                       heights = unit(c(72,82), "mm")), ncol=1,
                       heights = unit(c(9,154), "mm"))
@@ -605,7 +609,9 @@ AK <-
   geom_bar(stat="identity", position=position_dodge(width=0.9), color="black") +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
-  scale_fill_manual(values=bw, name="GCM") +
+  scale_fill_manual(values=bw, name="GCM", 
+                    labels=c("GISS-E2-H-CC ","MPI-ESM-LR ", "CCSM4 ", 
+                             "CESM1-CAM5 ", "HadGEM2-AO")) +
   xlab("GCM") +
   ylab(expression(paste(Delta," % Cover"))) +
   theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
@@ -662,7 +668,9 @@ DRS <-
 # make legend
 leg <- ggplot(data=m5[m5$model=="GISSM_v1.6.3",], aes(x=scenario, y=meanchange, fill=GCM)) +
   geom_bar(stat="identity", position=position_dodge(width=.9), color="black") +
-  scale_fill_manual(values=bw, name="GCM") +
+  scale_fill_manual(values=bw, name="GCM", 
+                    labels=c("GISS-E2-H-CC  ","MPI-ESM-LR ", "CCSM4 ", 
+                             "CESM1-CAM5 ", "HadGEM2-AO")) +
   theme(legend.position="none", legend.title=element_blank(),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
         legend.text.align = 0,
