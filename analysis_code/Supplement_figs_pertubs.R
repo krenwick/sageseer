@@ -337,12 +337,15 @@ levels(m5$mag) <- levs
 ann_text <- data.frame(mag = .9,meanchange = Inf,
                        var2 = factor("Precipitation",
                                      levels = c("Precipitation","Temperature")))
+# NOTE: temp and precip are basically separate plots glued together (I think)
 
 vj <- 1.5 # vertical adjustment for panel label, pos moves down
 hj <- .1 # horizotal placement of panel label, neg moves right
 
 AK <- 
   ggplot(data=m5[m5$model=="AK",], aes(x=mag, y=meanchange)) +
+  #geom_point(stat="identity",position=position_dodge(width=NULL), fill="white",
+           #color="black") + # didn't look good
   geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
            color="black") +
   geom_hline(yintercept=0) +
@@ -363,7 +366,8 @@ AK <-
         strip.text.x = element_blank()) +
   ylim(c(-4.5,11)) +
   #geom_text(data = ann_text,label = "(b) TC", hjust=hj, vjust=vj, size=3 )
-  geom_text(data=ann_text,label= "(b) Temporal Correlations", hjust=hj, vjust=vj, size=3)
+  geom_text(data=ann_text,label= "(b) Temporal Correlations", hjust=hj, vjust=vj, size=2.5)
+AK
 
 CC <- 
   ggplot(data=m5[m5$model=="randfor",], aes(x=mag, y=meanchange)) +
@@ -387,7 +391,7 @@ CC <-
         strip.text.x = element_blank()) +
   ylim(c(-4.5,11)) +
   #geom_text(data = ann_text,label = "(a) SC", hjust=hj, vjust=vj, size=3 )
-  geom_text(data = ann_text,label = "(a) Spatial Correlations", hjust=hj, vjust=vj, size=3 )
+  geom_text(data = ann_text,label = "(a) Spatial Correlations", hjust=hj, vjust=vj, size=2.5)
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM-full-400ppm",], aes(x=mag, y=meanchange)) +
@@ -408,7 +412,7 @@ KR <-
         panel.border = element_blank(),
         axis.line = element_line(colour = "black", size=.1)) +
   ylim(c(-4.5,11)) +
-  geom_text(data = ann_text,label = "(c) DGVM", hjust=hj, vjust=vj, size=3 )
+  geom_text(data = ann_text,label = "(c) DGVM", hjust=hj, vjust=vj, size=2.5)
 
 DRS <- 
   ggplot(data=m5[m5$model=="DRS",], aes(x=mag, y=meanchange)) +
@@ -429,7 +433,7 @@ DRS <-
         panel.border = element_blank(),
         axis.line = element_line(colour = "black", size=.1)) +
    #geom_text(data = ann_text,label = "(d) SS", hjust=hj, vjust=vj, size=3 )
-  geom_text(data = ann_text,label = "(d) Seedling Survival", hjust=hj, vjust=vj, size=3 )
+  geom_text(data = ann_text,label = "(d) Seedling Survival", hjust=hj, vjust=vj, size=2.5)
 
 
 # Save Plot
