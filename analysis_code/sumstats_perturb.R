@@ -103,3 +103,54 @@ kaps # these are uniformly terrible
 # Most agreement: Daniel and Caroline. But I don't think can really compare vals
 # that are this close. Except AK.KR- really bad.
 
+################################################################################
+# Try a different way to look at agreement on direction across perturbs
+# Test via Fleiss' Kappa
+
+# temp .2
+kap1 <- m4 %>% dplyr::select(site,model,mag,var,cat) %>%
+  filter(mag==.2) %>%
+  spread(model,cat)
+kap2 <- as.matrix(kap1[,4:7])
+kappam.fleiss(kap2) # .002, basically random
+
+# temp 2
+kap1b <- m4 %>% dplyr::select(site,model,mag,var,cat) %>%
+  filter(mag==2) %>%
+  spread(model,cat)
+kap2b <- as.matrix(kap1b[,4:7])
+kappam.fleiss(kap2b) #.06
+
+# temp 4
+kap1c <- m4 %>% dplyr::select(site,model,mag,var,cat) %>%
+  filter(mag==4) %>%
+  spread(model,cat)
+kap2c <- as.matrix(kap1c[,4:7])
+kappam.fleiss(kap2c) # .07
+kappam.fleiss(kap2c, exact=T) #.127
+
+# precip .9
+kap1 <- m4 %>% dplyr::select(site,model,mag,var,cat) %>%
+  filter(mag==.9) %>%
+  spread(model,cat)
+kap2 <- as.matrix(kap1[,4:7])
+kappam.fleiss(kap2) # -0.108... worse than random??
+
+# precip 1.1
+kap1 <- m4 %>% dplyr::select(site,model,mag,var,cat) %>%
+  filter(mag==1.1) %>%
+  spread(model,cat)
+kap2 <- as.matrix(kap1[,4:7])
+kappam.fleiss(kap2) # -0.121
+
+# precip 1.2
+kap1 <- m4 %>% dplyr::select(site,model,mag,var,cat) %>%
+  filter(mag==1.2) %>%
+  spread(model,cat)
+kap2 <- as.matrix(kap1[,4:7])
+kappam.fleiss(kap2) # -0.145
+kappam.fleiss(kap2, exact=T) # -.104
+
+# Basically the same story that percent agreement tells
+# Overall: agreement only marginally better than random
+
