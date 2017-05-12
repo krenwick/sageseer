@@ -141,6 +141,12 @@ kap1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
   spread(model,cat)
 kap2 <- as.matrix(kap1[,4:7])
 
+# Look into why kappas so low
+nrow(kap1[kap1$AK==kap1$DGVM,])/nrow(kap1) # agree for 74% of cases
+
+# number of "increase" for each model:
+with(kap1, table(AK,DGVM))
+# Kappa value is .147
 library(irr)
 
 # Can't find an organizd way to loop through models- calc. pairwise
@@ -164,6 +170,9 @@ kaps <- c(AK.KR$value,AK.DS$value,AK.CC$value,KR.DS$value,KR.CC$value,
           DS.CC$value)
 kaps #
 mean(kaps) #.117
+
+# Calculate Fleiss' Kappa, for agreement across mult models
+kappam.fleiss(kap2) # value is .113 ("slight agreement")
 ############################
 # re-do kaps for GCMs
 kapGCM1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
@@ -186,12 +195,17 @@ kapsGCM <- c(p1$value,p2$value,p3$value,p4$value,p5$value,p6$value,p7$value,
 range(kapsGCM)
 mean(kapsGCM)
 
+# Fleiss across all models
+kappam.fleiss(kap2) # .721, "substantial agreement"
+
+
 ############
 # kappa for emissions scenario
 kapRCP1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
   spread(scenario,cat)
 kap2 <- as.matrix(kapRCP1[,4:5])
-kappa2(kap2)
+kappa2(kap2) #.767
+kappam.fleiss(kap2) #.766 (reassuringly similar!)
 
 ################################################################################
 # MAGNITUDE OF CHANGE
