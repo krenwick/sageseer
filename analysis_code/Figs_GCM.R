@@ -103,9 +103,9 @@ nb <- 30  # number of grid divisions on each axis for site selection
 grid <- list(seq(xr[1], xr[2], length.out = nb), seq(yr[1], yr[2], length.out = nb) )
 
 p2 <- ggplot(data=out, aes(x=Comp.1, y=Comp.2)) +
-  geom_point(color="gray87", size=.5) +
+  geom_point(color="gray90", size=.5) +
   geom_point(data=out[out$LT_data == 1, sc], color="black", size=.5) +
-  geom_point(data=out[out$extra == 1, sc], color="gray48", size=.5) +
+  geom_point(data=out[out$extra == 1, sc], color="gray48", size=.6) +
   geom_hline( yintercept = grid[[2]], color = 'gray30', size=.3) +
   geom_vline( xintercept = grid[[1]], color = 'gray30', size=.3) +
   scale_x_continuous(limits=c(-12.1,12.15)) +
@@ -137,11 +137,11 @@ p1 <- ggplot(data=out2, aes(y=y, x=x, color=type)) +
   geom_point(size=.5) +
   # need extra layers: overlapping points hard to see
   geom_point(data=out2[out2$LT_data == 1, ], color="black", size=.5) +
-  geom_point(data=out2[out2$extra == 1, ], color="gray48", size=.5) +
+  geom_point(data=out2[out2$extra == 1, ], color="gray48", size=.6) +
   geom_polygon(data=wus, aes(long,lat, group), fill=NA,color="gray30", size=.3) +
   #coord_fixed(1.3) +
   coord_map("albers", lat0=39, lat1=45) +
-  scale_color_manual(values=c("gray48", "black","gray87"), 
+  scale_color_manual(values=c("gray48", "black","gray90"), 
     name="", breaks=c("presence", "LT","extra"),
     labels=c("Presence","Long-term data", "Extra site")) +
   theme(panel.grid.major=element_blank(),legend.position="none",
