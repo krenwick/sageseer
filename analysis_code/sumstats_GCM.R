@@ -26,6 +26,7 @@ unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) %>%
 # Calculate change and direction:
 m4 <- merged %>% 
   mutate(cat=ifelse(change>0, "increase", "decrease")) %>%
+  mutate(cat=ifelse(change==0&baseline>0,"increase",cat)) %>%
   # uncomment next line to add "nochange" back in
   #mutate(cat=ifelse(change==0, "nochange", cat)) %>%
   dplyr::select(site:GCM,change,cat) %>%
@@ -56,7 +57,7 @@ d2 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
   group_by(site,GCM,scenario) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   mutate(conf2=n.increase-n.decrease) %>%
   mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
   mutate(rel_conf_cat=conf_cat/n) %>%
@@ -67,26 +68,27 @@ d2 <- m4 %>%
 dim(d2)
 head(d2)
 round(table(d2$conf2)/7140,2)
-# perfectly agree 44% of time
-# consensus 83% of time
+# perfectly agree 48% of time
+# consensus 85% of time
 
 ##################################################
 # How often does choice of GCM cause a change in the direction of response?
 # OR: how often are GCMs in perfect agreement?
 m5 <- m4 %>% 
   group_by(site,model,scenario) %>%
-  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   group_by(model,scenario) %>%
   summarise(nochange=sum(n.increase==5|n.decrease==5), n=n()) %>%
   mutate(perc=(n-nochange)/n)
 (m5) # WOW! For SS and rcp45, it flips 73% of time! WHY?
-mean(m5$perc) # 20% flip, 80% consistent
-# 80% = where ALL 5 agree. Higher if look at 4/5.
+mean(m5$perc) # 18% flip, 82% consistent
+# 82% = where ALL 5 agree. Higher if look at 4/5.
+m5 %>% group_by(model) %>% summarise(mean=mean(perc))
 
 # Vary by RCP?
 m4 %>% 
   group_by(site,model,scenario) %>%
-  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   group_by(model,scenario) %>%
   summarise(nochange=sum(n.increase==5|n.decrease==5), n=n()) %>%
   mutate(perc=(n-nochange)/n) %>%
@@ -97,7 +99,7 @@ m4 %>%
 d2 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%
   group_by(site,model,scenario) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   mutate(conf2=n.increase-n.decrease) 
 dim(d2)
 head(d2)
@@ -106,17 +108,17 @@ round(table(d2$conf2)/5712,3) # at least 4/5 agree 92% of the time
 # How often does RCP cause a flip?
 m5 <- m4 %>% 
   group_by(site,model,GCM) %>%
-  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   group_by(model,GCM) %>%
   summarise(nochange=sum(n.increase==2|n.decrease==2), n=n()) %>%
   mutate(perc=(n-nochange)/n)
 m5 # Again- what's up with GISSM?!
-mean(m5$perc) # 8%
+mean(m5$perc) # 7%
 
 # How often does the ecological model cause a flip?
 m5 <- m4 %>% 
   group_by(site,scenario,GCM) %>%
-  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   group_by(scenario,GCM) %>%
   summarise(nochange=sum(n.increase==4|n.decrease==4), n=n()) %>%
   mutate(perc=(n-nochange)/n)
@@ -126,13 +128,13 @@ mean(m5$perc)
 # Does agreement among models vary by RCP?
 m4 %>% 
   group_by(site,scenario,GCM) %>%
-  summarise(n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   group_by(scenario,GCM) %>%
   summarise(nochange=sum(n.increase==4|n.decrease==4), n=n()) %>%
   mutate(perc=(n-nochange)/n) %>%
   group_by(scenario) %>%
   summarise(mean(perc))
-
+#
 # For paper, more clear to say how often is the direction of change consistent?
 
 
@@ -142,7 +144,7 @@ kap1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
 kap2 <- as.matrix(kap1[,4:7])
 
 # Look into why kappas so low
-nrow(kap1[kap1$AK==kap1$DGVM,])/nrow(kap1) # agree for 74% of cases
+nrow(kap1[kap1$GISSM_v1.6.3==kap1$DGVM,])/nrow(kap1) # agree for 74% of cases
 
 # number of "increase" for each model:
 with(kap1, table(AK,DGVM))
@@ -172,7 +174,7 @@ kaps #
 mean(kaps) #.117
 
 # Calculate Fleiss' Kappa, for agreement across mult models
-kappam.fleiss(kap2) # value is .113 ("slight agreement")
+kappam.fleiss(kap2) # value is .115 ("slight agreement")
 ############################
 # re-do kaps for GCMs
 kapGCM1 <- m4 %>% dplyr::select(site,model,scenario,GCM,cat) %>%
@@ -196,7 +198,7 @@ range(kapsGCM)
 mean(kapsGCM)
 
 # Fleiss across all models
-kappam.fleiss(kap2) # .721, "substantial agreement"
+kappam.fleiss(kap2) # .737, "substantial agreement"
 
 
 ############
@@ -285,7 +287,7 @@ d2 <- m4 %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
   #filter(scenario=="rcp85") %>% #exclude RCP4.5 output
   group_by(site) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   mutate(conf2=n.increase-n.decrease) %>%
   mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
   mutate(rel_conf_cat=conf_cat/n) %>%
@@ -301,7 +303,7 @@ hist(d2$n.decrease)
 d3 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%
   group_by(site, scenario) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   mutate(vuln=n.decrease/n) %>%
   mutate(conf2=n.increase-n.decrease) %>%
   mutate(conf3=conf2/n)
@@ -322,7 +324,7 @@ d3 %>% group_by(scenario) %>%
 GCM1 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%
   group_by(site, GCM) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   mutate(vuln=n.decrease/n) %>%
   mutate(conf2=n.increase-n.decrease) %>%
   mutate(conf3=conf2/n)
@@ -354,7 +356,7 @@ d5 <- merged %>%
   mutate(cat=ifelse(change>0, "increase", "decrease")) %>%
   dplyr::select(site:GCM,change,cat, bio1) %>% 
   group_by(site, scenario) %>%
-  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0),MAT=mean(bio1)) %>%
+  summarise(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease"),MAT=mean(bio1)) %>%
   mutate(vuln=n.decrease/n) %>%
   mutate(conf2=n.increase-n.decrease) %>%
   mutate(cat2=ifelse(conf2>11, "pos.h", "fix")) %>%
@@ -367,5 +369,8 @@ d5 %>% group_by(scenario,cat2) %>%
   summarise(min=min(MAT/10), max=max(MAT/10))
 #neg.h: 9.1-17.7, 9.1-17
 #pos.h:-1.9 - 9.5, -1.9 - 12.3
+
+################################################################################
+# Output matrix with pairwise % agreement and kappa values
 
 

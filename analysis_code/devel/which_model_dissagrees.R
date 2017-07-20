@@ -28,6 +28,7 @@ unit <- read.csv(paste(dpath, "focal_sites_by_zone.csv", sep="")) %>%
 # Calculate change and direction:
 m4 <- merged %>% 
   mutate(cat=ifelse(change>0, "increase", "decrease")) %>%
+  mutate(cat=ifelse(change==0&baseline>0,"increase",cat)) %>%
   # uncomment next line to add "nochange" back in
   #mutate(cat=ifelse(change==0, "nochange", cat)) %>%
   dplyr::select(site:GCM,change,cat)
@@ -36,7 +37,7 @@ d2 <- m4 %>%
   dplyr::select(site, model,scenario:GCM,change:cat) %>%
   filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
   group_by(site,GCM,scenario) %>%
-  mutate(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0)) %>%
+  mutate(n=n(),n.increase=sum(cat=="increase"), n.decrease=sum(cat=="decrease")) %>%
   mutate(conf2=n.increase-n.decrease) %>%
   mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
   mutate(rel_conf_cat=conf_cat/n) %>%
@@ -79,7 +80,7 @@ t2 <- as.data.frame(t) %>%
 ################################################################################
 # Look for climatic cause of differences
 ################################################################################
-clim <- merged %>% group_by(site) %>% summarise_each(funs(mean))
+clim <- merged %>% group_by(site) %>% summarise_all(funs(mean))
 
 ##############################################
 # Look at disagreement along PCA axes
@@ -93,14 +94,17 @@ p2 <- merge(d4,clim, by=c("site"), all.y=F) %>%
 ggplot(data=p1, aes(x=Comp.1*-1,y=Comp.2, color=issue, shape=consensus)) +
   geom_point(data=p2, aes(x=Comp.1*-1,y=Comp.2),color="black", shape=20) +
   geom_point() 
+
+ggplot(data=p1, aes(x=bio1,y=bio12, color=issue, shape=consensus)) +
+  geom_point(data=p2, aes(x=Comp.1*-1,y=Comp.2),color="black", shape=20) +
+  geom_point() 
+m2 <- merged %>% group_by(site) %>% summarise_at(vars(bio1:bio19),mean)
+c2 <- merge(d3,m2, by=c("site"), all.x=T)
   
+  
+dim(c2)
 
-
-
-
-c2 <- merge(d3,clim, by=c("site"), all.y=F)
-
-ggplot(data=c2, aes(x=issue, y=bio3)) +
+ggplot(data=c2, aes(x=issue, y=bio18)) +
   geom_boxplot(notch=T) +
   facet_wrap(~consensus)
 # Time series disagrees on hot sites.
@@ -149,7 +153,7 @@ ggplot(data=DGVMneg2, aes(x=bio7, y=change, color=issue)) +
 #BIO5-6 ok too
 #BIO7- really good. Temp range (bio5-bio6). Issues all at low range (less seasonal)
 
-ggplot(data=DGVMneg2, aes(x=issue, y=bio1, color=issue)) +
+ggplot(data=DGVMneg2, aes(x=issue, y=bio7, color=issue)) +
   geom_boxplot(notch=T) 
 #133 instances where DGVM decreases against the trend. How many total negs?
 t1 <- filter(merged, model=="DGVM", change<=0)
@@ -170,6 +174,40 @@ table(d3$issue,d3$consensus, d3$scenario)
 # no clear pattern with other models
 # not surprising: GISSM the only model where rcp made big difference
 
+# For GISSM: is it that more increase in 8.5, or other models decline?
+g <- filter(d3, issue=="GISSM") %>%
+  select(site,scenario,GCM,consensus,GISSM_v1.6.3)
+table(g$scenario,g$consensus) # greater increase
+# More increases for GISSM with 8.5
+
+# For gissm- magnitude of decrease? Any sites where sage totatally gone?
+go <- merged %>%filter(baseline==0|predicted==0) %>%
+  mutate(change=predicted-baseline)
+dim(go)
+go2 <- go %>% filter(GCM=="CCSM4",scenario=="rcp85") %>%filter(baseline==0)
+table(go2$model)
+# DGVM and GISSM only 2 to predict zero baseline: GISSM 4 sites DGVM 49
+# for GISSM, 2 of those grow in future. For DGVM, 14 with rcp8.5 ccsm
+filter(go2,model=="DGVM", predicted>0)
+
+go3 <- go %>% filter(GCM=="CCSM4",scenario=="rcp85") %>%filter(predicted==0)
+table(go3$model) # still just DGVM and GISSM predicting no sage in future
+
+go4 <- merged %>%filter(predicted==0)
+table(go4$model) # true across all scenarios
+
+# Back to GISSM: how big is the decline where it is the issue?
+t <- merge(m4,d3,by=c("site","scenario","GCM"),all=T)
+t2 <- t %>% filter(issue=="GISSM",consensus=="increase",scenario=="rcp85",
+                   model=="GISSM_v1.6.3") %>%
+  group_by(site) %>%
+  summarise_all(funs(mean))
+head(t2)
+hist(t2$predicted)
+hist(t2$change)
+
+
+###########################################################
 # 2. Is the difference due to response to a specific variable?
 # Evidence: for that site, agree on temp impact but not precip.
 
@@ -182,3 +220,85 @@ table(d3$issue,d3$consensus, d3$scenario)
 library(nnet)
 mod <- multinom(issue ~ bio1 + bio2 + bio3, c2)
 summary(mod)
+
+# It might make more sense to model individually:
+###################################################
+# TIME SERIES
+##################################################
+library(MASS)
+table(d3$issue,d3$consensus,d3$scenario)
+scale_this <- function(x) as.vector(scale(x))
+c3 <- c2 %>% filter(scenario=="rcp85", GCM=="CCSM4") %>%
+  mutate_at(vars(bio1:bio19), scale_this)
+TS <- mutate(c3, ts=ifelse(issue=="TS",1,0) )
+TSm <- glm(data=TS, family=binomial, ts~bio1+bio2+bio3+bio4+bio5+bio6+bio7+bio8+
+             bio9+bio10+bio11+bio12+bio13+bio14+bio15+bio16+bio17+bio18+bio19)
+summary(stepAIC(TSm,direction="both"))
+# 3 most influential (by far!): bio4, bio11 (neg), bio10 (pos)
+# more negative at sites with: warmer summers, colder winters, less seasonality
+# seems like maybe 2 clusters: not warm enough + too warm
+# okay so it's in the middle: starts decreasing at lower temp than others.
+# can see from figure: crosses zero earlier and more definitively
+
+ggplot(data=TS,aes(x=bio10,y=bio11,color=as.factor(ts), shape=consensus)) +
+  geom_point() 
+
+###################################################
+# GISSM
+##################################################
+GI <- mutate(c3, ts=ifelse(issue=="GISSM"&consensus=="increase",1,0) )
+GIm <- glm(data=GI, family=binomial, ts~bio1+bio2+bio3+bio4+bio5+bio6+bio7+bio8+
+             bio9+bio10+bio11+bio12+bio13+bio14+bio15+bio16+bio17+bio18+bio19)
+summary(stepAIC(GIm,direction="both"))
+# two highest: 6 and 12. More spread in the others
+
+###################################################
+# RF
+##################################################
+RF <- mutate(c3, ts=ifelse(issue=="RF"&consensus=="increase",1,0) )
+RFm <- glm(data=RF, family=binomial, ts~bio1+bio2+bio3+bio4+bio5+bio6+bio7+bio8+
+             bio9+bio10+bio11+bio12+bio13+bio14+bio15+bio16+bio17+bio18+bio19)
+summary(stepAIC(RFm,direction="both"))
+# bio11 by far (winter temp), then bio1. Similar to with TS:
+# more pessimistic at cooler sites (11) but not the coldest (1)
+# struggles most in the middle
+ggplot(data=RF,aes(x=bio11,y=bio13,color=as.factor(ts), shape=consensus)) +
+  geom_point() 
+
+###################################################
+# DGVM
+##################################################
+DG <- mutate(c3, ts=ifelse(issue=="DGVM"&consensus=="increase",1,0) )
+DGm <- glm(data=DG, family=binomial, ts~bio1+bio2+bio3+bio4+bio5+bio6+bio7+bio8+
+             bio9+bio10+bio11+bio12+bio13+bio14+bio15+bio16+bio17+bio18+bio19)
+summary(stepAIC(DGm,direction="both"))
+# bio6, 10, 12, 19
+# min temp coldest month: the colder, more likely to disagree.
+# is it due to lack of establishment?
+# basically same as other- narrow band in mid temp. range.
+# really just seems to be that all disagree on threshol
+ggplot(data=DG,aes(x=bio6,y=bio12,color=as.factor(ts), shape=consensus)) +
+  geom_point() 
+
+###################################################
+# DGVM: where is it more positive?
+##################################################
+DG <- mutate(c3, ts=ifelse(issue=="DGVM"&consensus=="decrease",1,0) )
+DGm <- glm(data=DG, family=binomial, ts~bio1+bio2+bio3+bio4+bio5+bio6+bio7+bio8+
+             bio9+bio10+bio11+bio12+bio13+bio14+bio15+bio16+bio17+bio18+bio19)
+summary(stepAIC(DGm,direction="both"))
+# more positive at warmer sites- CO2 effect.
+ggplot(data=DG,aes(x=bio11,y=bio15,color=as.factor(ts), shape=consensus)) +
+  geom_point()
+
+############################################
+ggplot(data=c3,aes(x=bio1,y=bio12,color=as.factor(issue), shape=consensus)) +
+  geom_point()
+
+c4 <- filter(c3, consensus=="increase")
+ggplot(data=c4,aes(x=bio1,fill=as.factor(issue))) +
+  geom_bar(width=1, position="dodge")
+
+c4 <- filter(c3, consensus=="decrease")
+ggplot(data=c4,aes(x=bio1,fill=as.factor(issue))) +
+  geom_bar(width=1, position="dodge")
