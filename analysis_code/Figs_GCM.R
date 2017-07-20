@@ -787,6 +787,8 @@ mapdat <- merge(d2,m6,by="site",all.y=F)
 md2 <- mapdat %>% group_by(site) %>%
   summarise(conf2=mean(conf2), lat=mean(latitude.x), lon=mean(longitude.x))
 table(md2$conf2)
+range(md2$lat)
+range(md2$lon)
 
 agree <- 
   ggplot(data=md2, aes(y=lat, x=lon)) +
@@ -808,15 +810,18 @@ agree <-
         axis.title.y=element_blank(), panel.background=element_blank(),
         panel.border=element_blank(),panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),plot.background=element_blank()) +
-  annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=-.2, size=3,fontface=2) 
+  #annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=-.2, size=3,fontface=2) 
+  #annotate("text", x=-Inf, y = Inf, label = "(b)", size=3,fontface=2) 
+annotate("text", x=-127, y = 49, label = "(b)", size=3,fontface=2) 
 
 # Code to override clipping
-gt2 <- ggplot_gtable(ggplot_build(agree))
-gt2$layout$clip[gt2$layout$name == "panel"] <- "off"
-agree <-gt2
+gt22 <- ggplot_gtable(ggplot_build(agree))
+gt22$layout$clip[gt2$layout$name == "panel"] <- "off"
+agree2 <-gt22
+plot(agree2)
 
 # Save PCA and map as multi-panel fig.
-pcamap <- grid.arrange(gg3, agree, ncol=1, heights=c(col1,col1), widths=col1)
+pcamap <- grid.arrange(gg3, agree2, ncol=1, heights=c(col1,col1), widths=col1)
 ggsave(paste(fpath, "pca_map_results.pdf", sep=""), plot=pcamap,
        width = col1, height = col2, units = 'mm')
 
