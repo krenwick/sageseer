@@ -344,10 +344,9 @@ hj <- .1 # horizotal placement of panel label, neg moves right
 
 AK <- 
   ggplot(data=m5[m5$model=="AK",], aes(x=mag, y=meanchange)) +
-  #geom_point(stat="identity",position=position_dodge(width=NULL), fill="white",
-           #color="black") + # didn't look good
-  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
-           color="black") +
+  geom_bar(stat="identity", width=1,
+           color="black",aes(fill=direction),position="stack") +
+  scale_fill_manual(values=c("gray80","white")) +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
@@ -371,8 +370,9 @@ AK
 
 CC <- 
   ggplot(data=m5[m5$model=="randfor",], aes(x=mag, y=meanchange)) +
-  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
-           color="black") +
+  geom_bar(stat="identity", width=1,
+           color="black",aes(fill=direction),position="stack") +
+  scale_fill_manual(values=c("gray80","white")) +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
@@ -395,8 +395,9 @@ CC <-
 
 KR <- 
   ggplot(data=m5[m5$model=="DGVM-full-400ppm",], aes(x=mag, y=meanchange)) +
-  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
-           color="black") +
+  geom_bar(stat="identity", width=1,
+           color="black",aes(fill=direction),position="stack") +
+  scale_fill_manual(values=c("gray80","white")) +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
@@ -416,8 +417,9 @@ KR <-
 
 DRS <- 
   ggplot(data=m5[m5$model=="DRS",], aes(x=mag, y=meanchange)) +
-  geom_bar(stat="identity", width=1,position=position_dodge(width=NULL), fill="white",
-           color="black") +
+  geom_bar(stat="identity", width=1,
+           color="black",aes(fill=direction),position="stack") +
+  scale_fill_manual(values=c("gray80","white")) +
   geom_hline(yintercept=0) +
   geom_errorbar(aes(ymax=upper,ymin=lower),position=position_dodge(width=0.9), width=.2) +
   xlab("Variable") +
