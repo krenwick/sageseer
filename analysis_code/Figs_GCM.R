@@ -147,9 +147,11 @@ p1 <- ggplot(data=out2, aes(y=y, x=x, color=type)) +
   theme(panel.grid.major=element_blank(),legend.position="none",
         panel.grid.minor=element_blank(),plot.background=element_blank(),
         panel.border=element_rect(size=0.2, linetype="solid")) +
-  annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=2, size=3,fontface=2) +
+  #annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=2, size=3,fontface=2) +
+  annotate("text", x=-125, y = 49, label = "(b)", hjust=4, size=3,fontface=2) +
   xlab("Longitude") +
   ylab("Latitude") 
+p1
 
 # Code to override clipping
 gt2 <- ggplot_gtable(ggplot_build(p1))
@@ -665,6 +667,17 @@ ggsave(paste(fpath, "GCM_magchange_bw.pdf", sep=""), plot=GCM_bar_bw,
 ################################################################################
 vj <- 1.5 # vertical adjustment for panel label, pos moves down
 hj <- -.1 # horizotal placement of panel label, neg moves right, pos left
+d4 <- merged %>%
+  filter(model!="MaxEntRaw"&model!="MaxEntBin") %>%
+  filter(scenario=="rcp85") %>% #exclude RCP4.5 output
+  group_by(site) %>%
+  summarise(n=n(),n.increase=sum(change>0), n.decrease=sum(change<=0), MAT=mean(bio1)/10) %>%
+  mutate(conf2=n.increase-n.decrease) %>%
+  mutate(conf_cat=pmax(n.increase,n.decrease)) %>%
+  mutate(rel_conf_cat=conf_cat/n) %>%
+  mutate(consensus=ifelse(conf_cat==n.increase,"Increase","Decrease")) %>%
+  mutate(consensus=ifelse(n.increase==n.decrease&n.increase==conf_cat,"Unsure",consensus)) %>%
+  filter(n==max(n))
 
 pts <- ggplot(data=d4, aes(x=MAT, y=(conf2))) +
   geom_point(aes(color=conf2)) +
@@ -810,13 +823,11 @@ agree <-
         axis.title.y=element_blank(), panel.background=element_blank(),
         panel.border=element_blank(),panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),plot.background=element_blank()) +
-  #annotate("text", x=-Inf, y = Inf, label = "(b)", vjust=1.3, hjust=-.2, size=3,fontface=2) 
-  #annotate("text", x=-Inf, y = Inf, label = "(b)", size=3,fontface=2) 
-annotate("text", x=-127, y = 49, label = "(b)", size=3,fontface=2) 
+  annotate("text", x=-127, y = 49, label = "(b)", hjust=3, size=3,fontface=2) 
 
 # Code to override clipping
 gt22 <- ggplot_gtable(ggplot_build(agree))
-gt22$layout$clip[gt2$layout$name == "panel"] <- "off"
+gt22$layout$clip[gt22$layout$name == "panel"] <- "off"
 agree2 <-gt22
 plot(agree2)
 
