@@ -1,0 +1,57 @@
+pft "ARTR" (
+	include 1
+	lifeform "TREE"
+	pathway "c3"
+	lambda_max 0.8
+	emax 5
+	reprfrac 0.01 !.1
+	wscal_min 0.35
+	crownarea_max 3
+	turnover_root 0.7
+	ltor_max .5
+	k_allom2 18 !5
+	k_allom3 1 !0.67
+	k_rp 1.6
+	wooddens 332
+	cton_leaf 26
+	cton_root 41
+	cton_sap 330
+	kest_repr 20
+	kest_bg 0.1
+	kest_pres 1
+	litterme 0.3
+	rootdist 0.9 0.1
+	longevity 150
+	k_allom1 100 !40 !100
+	k_latosa 3200
+	turnover_leaf 1
+	respcoeff 1
+	est_max 0.2
+	parff_min 2500000
+	alphar 10
+	greff_min 0.08
+	turnover_sap .1 !.075 !0.1
+	pstemp_min -2
+	pstemp_low 15
+	pstemp_high 25
+	pstemp_max 38
+	sla 16
+	gmin 0.5
+	phengdd5ramp 0
+	tcmin_surv -16.13
+	tcmin_est -9.27
+	tcmax_est 5.81
+	twmin_est 8.5
+	gdd5min_est 957.4
+	k_chilla 0
+	k_chillb 100
+	k_chillk 0.05
+	fireresist 0.1
+	intc 0.02
+	drought_tolerance 0.1
+	phenology "summergreen"
+	ifsage 1
+	phen_winter 0.39 ! proportion of leaves on plant in winter
+	aphenmax 100 ! max days with full leaf cover
+	downramp .05 ! proportion of leaves lost each day after hitting aphenmax
+)

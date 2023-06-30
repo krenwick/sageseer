@@ -1,0 +1,24 @@
+CHANGES FOR GCB PAPER:
+
+if (indiv.pft.ifsage == 1) { //KMR added new max height for sage
+			HEIGHT_MAX = 3;
+		}
+
+if (pft.ifsage == 1) { //KMR added
+							SAPSIZE = 0.1; //KMR added
+						} //KMR added
+
+
+
+PHENOLOGY SNIPPET:
+if (pft.ifsage == 1) //Added by KMR in 2017
+				// Changes original so APHENMAX set in ins file for sagebrush
+				// Also adds phen_winter: proportion of leaves on sage in winter
+				if (climate.gdd5 > pft.gdd0[climate.chilldays] && aphen < pft.aphenmax)
+						phen = min(1.0,
+								(climate.gdd5 - pft.gdd0[climate.chilldays])
+								/ pft.phengdd5ramp + pft.phen_winter);
+						else if (aphen > pft.aphenmax)
+							phen = max(pft.phen_winter,
+									(1-(phencount* pft.downramp)));
+						else phen = pft.phen_winter;
